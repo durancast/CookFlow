@@ -1,0 +1,17 @@
+# --- Frontend (Astro) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.astro/
+
+# --- Backend (Laravel) ---
+backend/vendor/
+backend/.env
+backend/storage/*.key
+backend/public/storage
+backend/public/hot
+
+# --- Sistema y Editores ---
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
