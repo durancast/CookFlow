@@ -10,5 +10,9 @@
   },
   "dependencies": {
     "astro": "^5.17.1"
-  }
+  },
+  "engines": {
+  "npm": "cabrones-usad-pnpm",
+  "pnpm": ">=9.0.0"
+}
 }
