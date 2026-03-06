@@ -41,7 +41,7 @@ Actualmente nos encontramos en la fase de **MVP: Catálogo Funcional**.
 - [ ] [F2] Estructura de Datos y Diseño Base (Pendiente)
 - [ ] [F3] Integración Front-Back (Pendiente)
 
-Para más detalle, consulta nuestro [Tablero de Proyecto en GitHub](https://github.com/users/tu-usuario/projects/X).
+Para más detalle, consulta nuestro [Tablero de Proyecto en GitHub](https://github.com/users/alexd2212/projects/2).
 
 ---
 
