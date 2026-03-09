@@ -96,5 +96,13 @@ export const MOCK_PRODUCTS: Product[] = [
     description: "Brownie de chocolate caliente con helado de vainilla.",
     category: "postres",
     image: "https://picsum.photos/seed/brownie/400/300"
+  },
+  {
+    id: 13,
+    name: "Brownie con Helado",
+    price: 5.50,
+    description: "Brownie de chocolate caliente con helado de vainilla.",
+    category: "postres",
+    image: "https://picsum.photos/seed/brownie/400/300"
   }
 ];
