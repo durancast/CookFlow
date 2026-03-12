@@ -13,14 +13,14 @@ La relación principal es de **uno a muchos** (1:N) entre las tablas `categories
 ### Tabla: Categories
 - `id`: Identificador único (Primary Key).
 - `name`: Nombre de la categoría (bebidas, entrantes, hamburguesas, etc.).
+- `slug` : Versión del nombre para las URL's (hamburguesas)
 
 ### Tabla: Products
 - `id`: Identificador único (Primary Key).
-- `category_id`: Clave foránea (Foreign Key) relacionada con categories.
 - `name`: Nombre del producto.
 - `price`: Precio (Decimal 8,2).
 - `description`: Descripción del plato.
 - `image`: URL o ruta de la imagen del producto.
-
+- `category_id`: Clave foránea (Foreign Key) relacionada con categories.
 ---
 *Diseño realizado por: Luis*
