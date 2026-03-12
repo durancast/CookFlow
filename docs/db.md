@@ -1,4 +1,5 @@
 # Diseño de la Base de Datos - CookFlow
+Nombre de la BBDD = cookflow_db
 
 Este documento describe la estructura relacional del backend para la gestión del menú.
 
