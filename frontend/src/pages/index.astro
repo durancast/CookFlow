@@ -1,18 +1,42 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-import {MOCK_PRODUCTS} from '../data/products'
+import DishCard from '../components/DishCard.astro';
+import OrderSidebar from '../components/OrderSidebar.astro';
+import NavSidebar from '../components/NavSidebar.astro';
+import type { Product } from '../types/api'; // Importamos el tipo
 
+// 1. Petición al backend
+const res = await fetch('http://127.0.0.1:8000/api/products');
+const products: Product[] = await res.json();
+
+// 2. Extraer categorías únicas dinámicamente de los productos recibidos
+const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
 ---
 
 <Layout>
-	{MOCK_PRODUCTS.map(product => (
-		<ol> 
-			<li>{product.name}</li>
-			<li>{product.price}</li>
-			<li>{product.description}</li>
-			<li>{product.category}</li>
-			<li><img src={product.image} alt={product.name}></li>
-		</ol>
-	))}
+  <div class="flex h-screen overflow-hidden bg-tpv-bg">
+    <NavSidebar />
+
+    <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <header class="shrink-0 p-6 border-b border-tpv-border bg-tpv-bg/80 backdrop-blur-md">
+        <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+          {categories.map((cat) => (
+            <button class="px-6 py-2 rounded-full bg-tpv-surface border border-tpv-border text-sm font-medium hover:border-tpv-accent transition-all whitespace-nowrap">
+              {cat}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <section class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
+          {products.map(p => <DishCard product={p} />)}
+        </div>
+      </section>
+    </main>
+
+    <aside class="shrink-0 w-96 border-l border-tpv-border h-full">
+      <OrderSidebar />
+    </aside>
+  </div>
 </Layout>
