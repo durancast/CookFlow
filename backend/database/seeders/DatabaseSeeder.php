@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
 
         // Bebidas 
         Product::create(['category_id' => $drinks->id, 'name' => 'Cerveza', 'price' => 3.00, 'description' => 'Tercio de cerveza nacional bien fría.', 'image' => 'cerveza.webp']);
-        Product::create(['category_id' => $drinks->id, 'name' => 'Coca-Cola', 'price' => 2.50, 'description' => 'Refresco original 33cl.', 'image' => 'coca-cola.webp']);
+        Product::create(['category_id' => $drinks->id, 'name' => 'Coca-Cola', 'price' => 2.50, 'description' => 'Refresco original 33cl.', 'image' => 'coca_cola.webp']);
         Product::create(['category_id' => $drinks->id, 'name' => 'Agua', 'price' => 1.50, 'description' => 'Botella de agua', 'image' => 'agua.webp']);
 
         // Postres
