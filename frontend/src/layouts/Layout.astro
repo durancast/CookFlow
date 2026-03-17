@@ -6,14 +6,12 @@ import '../styles/global.css';
 <html lang="es" class="bg-tpv-bg text-tpv-text">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
         <title>CookFlow TPV</title>
     </head>
-    <body class="font-sans antialiased min-h-screen">
-        <main class="p-8">
-            <slot />
-        </main>
+    <body class="font-sans antialiased h-screen w-full overflow-hidden m-0 p-0">
+        <slot />
     </body>
 </html>
