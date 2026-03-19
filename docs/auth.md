@@ -7,7 +7,7 @@ Base URL: `http://localhost:8000/api`
 ## Tecnología
 
 **Laravel Sanctum v4** — autenticación mediante tokens de API (Bearer Token).
-Cada camarero inicia sesión y recibe un token que adjunta en cada petición protegida.
+Cada usuario inicia sesión y recibe un token que adjunta en cada petición protegida.
 
 ---
 
@@ -15,7 +15,7 @@ Cada camarero inicia sesión y recibe un token que adjunta en cada petición pro
 
 ### POST /api/login
 
-Autentica al camarero y devuelve un token de acceso.
+Autentica al usuario y devuelve un token de acceso junto con sus datos y rol.
 
 **Request:**
 ```
@@ -25,7 +25,7 @@ Content-Type: application/json
 
 ```json
 {
-  "email": "camarero@cookflow.com",
+  "email": "admin@cookflow.com",
   "password": "password123"
 }
 ```
@@ -33,14 +33,21 @@ Content-Type: application/json
 **Response 200 OK:**
 ```json
 {
-  "token": "1|abc123xyz...",
+  "token": "1|abc123tokengenerado...",
   "user": {
     "id": 1,
-    "name": "Carlos García",
-    "email": "camarero@cookflow.com"
+    "name": "Alejandro",
+    "email": "admin@cookflow.com",
+    "role": "admin",
+    "email_verified_at": null,
+    "created_at": "2026-03-19T09:33:00.000000Z",
+    "updated_at": "2026-03-19T09:33:00.000000Z"
   }
 }
 ```
+
+> **Contrato con el frontend:** las claves `token` y `user.role` están **garantizadas** en la respuesta.
+> El frontend de Alejandro debe leer `data.token` y `data.user.role`.
 
 **Response 422 (credenciales incorrectas):**
 ```json
@@ -71,11 +78,18 @@ Authorization: Bearer {token}
 }
 ```
 
+**Response 401 (sin token o token inválido):**
+```json
+{
+  "message": "Unauthenticated."
+}
+```
+
 ---
 
 ### GET /api/me
 
-Devuelve los datos del camarero autenticado.
+Devuelve los datos del usuario autenticado.
 
 **Request:**
 ```
@@ -87,17 +101,64 @@ Authorization: Bearer {token}
 ```json
 {
   "id": 1,
-  "name": "Carlos García",
-  "email": "camarero@cookflow.com"
+  "name": "Alejandro",
+  "email": "admin@cookflow.com",
+  "role": "admin",
+  "email_verified_at": null,
+  "created_at": "2026-03-19T09:33:00.000000Z",
+  "updated_at": "2026-03-19T09:33:00.000000Z"
 }
 ```
 
-**Response 401 (sin token o token inválido):**
+---
+
+## Roles de usuario
+
+| Rol | Descripción |
+|---|---|
+| `user` | Camarero — acceso al TPV, puede hacer pedidos |
+| `admin` | Administrador — acceso a rutas protegidas de gestión |
+
+El campo `role` se almacena en la columna `role` de la tabla `users` (valor por defecto: `"user"`).
+
+---
+
+## Middleware de rol `admin`
+
+Las rutas de administración están protegidas por dos capas de middleware:
+
+```
+auth:sanctum  →  admin
+```
+
+- `auth:sanctum` verifica que el Bearer Token sea válido.
+- `admin` verifica que `user.role === "admin"`.
+
+**Response 403 (token válido pero rol insuficiente):**
 ```json
 {
-  "message": "Unauthenticated."
+  "message": "Forbidden"
 }
 ```
+
+Para proteger una ruta nueva de admin, añádela en `routes/api.php` dentro del grupo:
+
+```php
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // tus rutas aquí
+});
+```
+
+---
+
+## Rutas protegidas vs públicas
+
+| Endpoint | Método | Autenticación | Rol requerido |
+| --- | --- | --- | --- |
+| `/api/products` | GET | No | — |
+| `/api/login` | POST | No | — |
+| `/api/logout` | POST | Sí (Bearer Token) | cualquiera |
+| `/api/me` | GET | Sí (Bearer Token) | cualquiera |
 
 ---
 
@@ -112,8 +173,9 @@ const res = await fetch('/api/login', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email, password }),
 });
-const { token } = await res.json();
+const { token, user } = await res.json();
 localStorage.setItem('token', token);
+localStorage.setItem('role', user.role); // 'admin' | 'user'
 
 // Petición autenticada
 const meRes = await fetch('/api/me', {
@@ -123,49 +185,38 @@ const meRes = await fetch('/api/me', {
 
 ---
 
-## Rutas protegidas vs públicas
-
-| Endpoint | Método | Autenticación |
-|---|---|---|
-| `/api/products` | GET | No |
-| `/api/login` | POST | No |
-| `/api/logout` | POST | Sí (Bearer Token) |
-| `/api/me` | GET | Sí (Bearer Token) |
-
----
-
-## Setup inicial — crear un camarero de prueba
+## Setup inicial — crear usuarios de prueba
 
 ```bash
 php artisan tinker
 ```
 
 ```php
+// Admin
+App\Models\User::create([
+    'name'     => 'Alejandro',
+    'email'    => 'admin@cookflow.com',
+    'password' => bcrypt('password123'),
+    'role'     => 'admin',
+]);
+
+// Camarero
 App\Models\User::create([
     'name'     => 'Carlos García',
     'email'    => 'camarero@cookflow.com',
     'password' => bcrypt('password123'),
+    'role'     => 'user',
 ]);
 ```
 
 ---
 
-## Pasos para activar completamente
+## Probar en Postman
 
-1. Ejecutar la migración de tokens de Sanctum:
-   ```bash
-   php artisan migrate
-   ```
-
-2. Crear un usuario de prueba (ver arriba).
-
-3. Probar el login:
-   ```bash
-   curl -X POST http://localhost:8000/api/login \
-     -H "Content-Type: application/json" \
-     -d '{"email":"camarero@cookflow.com","password":"password123"}'
-   ```
+1. `POST /api/login` con body JSON → copia el valor de `token`
+2. En las siguientes peticiones: pestaña **Authorization** → tipo **Bearer Token** → pega el token
+3. `GET /api/me` para verificar que el token funciona y que `role` llega correctamente
 
 ---
 
-*Documentación generada el 2026-03-12 — Sanctum v4.3*
+Documentación actualizada el 2026-03-19 — Sanctum v4.3
