@@ -4,100 +4,50 @@ Base URL: `http://localhost:8000/api`
 
 ---
 
-Actualizar el archivo docs/api.md con ejemplos reales del JSON que devuelve el catálogo para que Alejandro sepa cómo mapearlos.## GET /api/products
+## GET /api/products
 
-Devuelve la lista completa de platos del catálogo, cada uno con su categoría incluida.
+Devuelve la lista completa de platos del catálogo, cada uno con su categoría incluida. Ruta pública, no requiere autenticación.
 
-### Request
-
-```
+```http
 GET /api/products
 ```
 
-No requiere parámetros ni autenticación.
-
-### Response
-
-**Status:** `200 OK`
-**Content-Type:** `application/json`
+`200 OK`
 
 ```json
 [
   {
     "id": 1,
     "category_id": 1,
-    "name": "Paella Valenciana",
-    "description": "Paella tradicional con pollo, conejo y verduras de temporada.",
-    "price": "12.50",
-    "created_at": "2026-03-12T21:14:42.000000Z",
-    "updated_at": "2026-03-12T21:14:42.000000Z",
+    "name": "Patatas Bravas",
+    "description": "Patatas crujientes acompañadas de salsa brava.",
+    "price": "6.50",
+    "image": "patatas_bravas.webp",
     "category": {
       "id": 1,
-      "name": "Arroces",
-      "created_at": "2026-03-12T21:14:42.000000Z",
-      "updated_at": "2026-03-12T21:14:42.000000Z"
-    }
-  },
-  {
-    "id": 2,
-    "category_id": 1,
-    "name": "Arroz Negro",
-    "description": "Arroz con tinta de calamar y alioli casero.",
-    "price": "13.00",
-    "created_at": "2026-03-12T21:14:42.000000Z",
-    "updated_at": "2026-03-12T21:14:42.000000Z",
-    "category": {
-      "id": 1,
-      "name": "Arroces",
-      "created_at": "2026-03-12T21:14:42.000000Z",
-      "updated_at": "2026-03-12T21:14:42.000000Z"
-    }
-  },
-  {
-    "id": 3,
-    "category_id": 2,
-    "name": "Hamburguesa Clásica",
-    "description": "Carne de ternera, lechuga, tomate y cheddar.",
-    "price": "9.50",
-    "created_at": "2026-03-12T21:14:42.000000Z",
-    "updated_at": "2026-03-12T21:14:42.000000Z",
-    "category": {
-      "id": 2,
-      "name": "Hamburguesas",
-      "created_at": "2026-03-12T21:14:42.000000Z",
-      "updated_at": "2026-03-12T21:14:42.000000Z"
+      "name": "Entrantes",
+      "slug": "entrantes"
     }
   }
 ]
 ```
 
-### Campos del objeto `product`
+Campos del objeto `product`:
 
 | Campo | Tipo | Descripción |
-|---|---|---|
+| --- | --- | --- |
 | `id` | integer | Identificador único del producto |
 | `category_id` | integer | FK de la categoría |
 | `name` | string | Nombre del plato |
 | `description` | string \| null | Descripción del plato |
-| `price` | string (decimal) | Precio en euros, formato `"12.50"` |
-| `category` | object | Categoría anidada (Eager Loading) |
+| `price` | string (decimal) | Precio en euros, formato `"6.50"` |
+| `image` | string \| null | Nombre del archivo de imagen |
+| `category` | object | Categoría anidada (eager loading) |
 
-### Campos del objeto `category`
+Notas para el frontend:
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador único de la categoría |
-| `name` | string | Nombre de la categoría |
-
----
-
-## Notas para el frontend (Alejandro)
-
-- **`price` llega como string**, no como número. Usar `parseFloat(product.price)` si necesitas operar con él.
-- La **categoría ya viene embebida** en cada producto, no hace falta una segunda petición a `/api/categories`.
-- Para agrupar platos por categoría en la UI, puedes reducir el array por `category.id` o `category.name`.
-
-Ejemplo en JavaScript/TypeScript:
+- `price` llega como string. Usar `parseFloat(product.price)` si necesitas operar con él.
+- La categoría ya viene embebida, no hace falta una segunda petición a `/api/categories`.
 
 ```ts
 const res = await fetch('http://localhost:8000/api/products');
@@ -114,15 +64,223 @@ const byCategory = products.reduce((acc, product) => {
 
 ---
 
-## Campos pendientes (próximas tareas)
+## POST /api/products
 
-Según el diseño de la BBDD (`docs/db.md`), estos campos se añadirán cuando estén implementados:
+Crea un nuevo producto. Requiere token de admin.
 
-| Campo | Tabla | Descripción |
-|---|---|---|
-| `slug` | `categories` | Versión URL-friendly del nombre (ej: `"hamburguesas"`) |
-| `image` | `products` | URL o ruta de la imagen del plato |
+```http
+POST /api/products
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Ensalada César",
+  "description": "Lechuga romana, pollo a la plancha, parmesano y croutons.",
+  "price": 9.50,
+  "category_id": 1,
+  "image": "ensalada_cesar.webp"
+}
+```
+
+Campos del body:
+
+| Campo | Tipo | Requerido | Descripción |
+| --- | --- | --- | --- |
+| `name` | string | Sí | Nombre del plato (máx. 255 caracteres) |
+| `description` | string \| null | No | Descripción del plato |
+| `price` | number | Sí | Precio en euros, mayor o igual a 0 |
+| `category_id` | integer | Sí | Debe existir en la tabla `categories` |
+| `image` | string \| null | No | Nombre del archivo de imagen |
+
+`201 Created`
+
+```json
+{
+  "id": 11,
+  "name": "Ensalada César",
+  "description": "Lechuga romana, pollo a la plancha, parmesano y croutons.",
+  "price": "9.50",
+  "image": "ensalada_cesar.webp",
+  "category_id": 1,
+  "category": {
+    "id": 1,
+    "name": "Entrantes",
+    "slug": "entrantes"
+  }
+}
+```
+
+`422 Unprocessable Entity` (validación fallida)
+
+```json
+{
+  "message": "The price field must be a number.",
+  "errors": {
+    "price": ["The price field must be a number."]
+  }
+}
+```
 
 ---
 
-*Documentación generada el 2026-03-12*
+## PUT /api/products/{id}
+
+Actualiza un producto existente. Solo se envían los campos que cambian. Requiere token de admin.
+
+```http
+PUT /api/products/11
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+  "price": 10.00
+}
+```
+
+`200 OK` — devuelve el producto completo con la categoría anidada.
+
+`404 Not Found` — si el producto no existe.
+
+---
+
+## DELETE /api/products/{id}
+
+Elimina un producto. Requiere token de admin.
+
+```http
+DELETE /api/products/11
+Authorization: Bearer {token}
+```
+
+`204 No Content` — sin cuerpo de respuesta.
+
+`404 Not Found` — si el producto no existe.
+
+---
+
+## GET /api/tables
+
+Devuelve todas las mesas físicas del restaurante ordenadas por número. Requiere token de admin.
+
+```http
+GET /api/tables
+Authorization: Bearer {token}
+```
+
+`200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "number": 1,
+    "capacity": 4,
+    "status": "free"
+  },
+  {
+    "id": 2,
+    "number": 2,
+    "capacity": 2,
+    "status": "occupied"
+  }
+]
+```
+
+Campos del objeto `table`:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | integer | Identificador único |
+| `number` | integer | Número visible de la mesa (único) |
+| `capacity` | integer | Número de comensales |
+| `status` | string | Estado actual: `free`, `occupied`, `pending` |
+
+---
+
+## POST /api/tables
+
+Crea una nueva mesa física. Requiere token de admin.
+
+```http
+POST /api/tables
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+  "number": 5,
+  "capacity": 6,
+  "status": "free"
+}
+```
+
+Campos del body:
+
+| Campo | Tipo | Requerido | Descripción |
+| --- | --- | --- | --- |
+| `number` | integer | Sí | Número de mesa, único, mínimo 1 |
+| `capacity` | integer | Sí | Comensales, mínimo 1 |
+| `status` | string | No | `free` (defecto), `occupied` o `pending` |
+
+`201 Created`
+
+```json
+{
+  "id": 5,
+  "number": 5,
+  "capacity": 6,
+  "status": "free"
+}
+```
+
+`422 Unprocessable Entity` (número de mesa ya existe)
+
+```json
+{
+  "message": "The number has already been taken.",
+  "errors": {
+    "number": ["The number has already been taken."]
+  }
+}
+```
+
+---
+
+## DELETE /api/tables/{id}
+
+Elimina una mesa. Requiere token de admin.
+
+```http
+DELETE /api/tables/5
+Authorization: Bearer {token}
+```
+
+`204 No Content` — sin cuerpo de respuesta.
+
+`404 Not Found` — si la mesa no existe.
+
+---
+
+## Resumen de rutas
+
+| Endpoint | Método | Autenticación | Rol |
+| --- | --- | --- | --- |
+| `/api/products` | GET | No | — |
+| `/api/products` | POST | Sí | admin |
+| `/api/products/{id}` | PUT | Sí | admin |
+| `/api/products/{id}` | DELETE | Sí | admin |
+| `/api/tables` | GET | Sí | admin |
+| `/api/tables` | POST | Sí | admin |
+| `/api/tables/{id}` | DELETE | Sí | admin |
+| `/api/login` | POST | No | — |
+| `/api/logout` | POST | Sí | cualquiera |
+| `/api/me` | GET | Sí | cualquiera |
+
+---
+
+Documentación actualizada el 2026-03-19
