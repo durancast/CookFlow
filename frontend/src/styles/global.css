@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  
   /* --- COLORES --- */
   --color-tpv-bg: #09090b;
   --color-tpv-surface: #18181b;

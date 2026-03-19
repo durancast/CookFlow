@@ -1,11 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import DishCard from '../components/DishCard.astro';
-import OrderSidebar from '../components/OrderSidebar.astro';
 import NavSidebar from '../components/NavSidebar.astro';
+
+
+import OrderSidebar from '../components/react/OrderSidebar.jsx'; 
 import type { Product } from '../types/api'; 
 
-// 1. Petición al backend
+// 1. Petición al backend de Laravel
 const res = await fetch('http://127.0.0.1:8000/api/products');
 const products: Product[] = await res.json();
 
@@ -21,10 +23,11 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden w-full relative">
-      <header class="shrink-0 p-4 md:p-6 border-b border-tpv-border bg-tpv-bg/80 backdrop-blur-md">
+      
+      <header class="shrink-0 p-4 md:p-6 border-b border-tpv-border bg-tpv-surface/80 backdrop-blur-md">
         <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
           {categories.map((cat) => (
-            <button class="px-4 md:px-6 py-2 rounded-full bg-tpv-surface border border-tpv-border text-sm font-medium hover:border-tpv-accent transition-all whitespace-nowrap">
+            <button class="px-4 md:px-6 py-2 rounded-full bg-tpv-surface border border-tpv-border text-sm font-medium hover:border-tpv-accent hover:text-tpv-accent transition-all whitespace-nowrap">
               {cat}
             </button>
           ))}
@@ -56,9 +59,75 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
       </div>
     </main>
 
-    <aside class="hidden lg:flex shrink-0 w-80 xl:w-96 border-l border-tpv-border h-full">
-      <OrderSidebar />
+    <aside class="hidden lg:flex shrink-0 w-80 xl:w-96 border-l border-tpv-border h-full bg-tpv-bg z-40 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+      <OrderSidebar client:load />
     </aside>
 
   </div>
 </Layout>
+
+<script>
+  // Importamos el estado global del carrito
+  import { cartItems } from '../store/cartStore.js';
+
+  interface CartItem {
+    price: number;
+    quantity: number;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const countEl = document.getElementById('mobile-cart-count');
+    const totalEl = document.getElementById('mobile-cart-total');
+
+    cartItems.subscribe((items: readonly CartItem[]) => {
+      // 1. Calcular cantidades
+      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      if (countEl) countEl.textContent = totalItems.toString();
+      if (totalEl) totalEl.textContent = totalPrice.toFixed(2) + '€';
+
+
+      const btn = document.getElementById('mobile-cart-btn');
+      if (btn && totalItems > 0) {
+        btn.classList.add('scale-[1.02]');
+        setTimeout(() => btn.classList.remove('scale-[1.02]'), 150);
+      }
+    });
+
+    // Funcionalidad de filtrado de categorías 
+    const categoryButtons = document.querySelectorAll('header button');
+    const dishCards = document.querySelectorAll('.dish-card'); 
+    
+    if (categoryButtons.length > 0 && dishCards.length > 0) {
+      categoryButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const buttonText = button.textContent.trim().toLowerCase();
+          const filterCategory = buttonText === 'todos' ? 'all' : buttonText;
+
+          dishCards.forEach(card => {
+            const cardCategory = (card.getAttribute('data-category') || '').trim().toLowerCase();
+            
+            if (filterCategory === 'all' || cardCategory === filterCategory) {
+              card.classList.remove('hidden');
+              card.classList.add('flex'); 
+            } else {
+              card.classList.add('hidden');
+              card.classList.remove('flex'); 
+            }
+          });
+
+          categoryButtons.forEach(btn => {
+            btn.classList.remove('bg-tpv-accent', 'text-white');
+            btn.classList.add('bg-tpv-surface', 'text-gray-800');
+          });
+
+          button.classList.remove('bg-tpv-surface', 'text-gray-800');
+          button.classList.add('bg-tpv-accent', 'text-white');
+        });
+      });
+    }
+  })
+</script>
+
+

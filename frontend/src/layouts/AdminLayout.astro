@@ -1,0 +1,89 @@
+---
+// src/layouts/AdminLayout.astro
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Panel de Administración</title>
+    
+    <script is:inline>
+      const token = localStorage.getItem('auth_token');
+      const userStr = localStorage.getItem('user_data');
+      
+      if (!token || !userStr) {
+        window.location.replace('/login');
+      } else {
+        const user = JSON.parse(userStr);
+        if (user.role !== 'admin') {
+          window.location.replace('/'); // Si es camarero, al TPV
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-tpv-bg text-gray-800 h-screen flex overflow-hidden">
+    
+    <aside class="w-64 bg-tpv-surface border-r border-tpv-border flex flex-col h-full shrink-0">
+      <div class="p-6 border-b border-tpv-border">
+        <h2 class="text-2xl font-black text-transparent bg-clip-text bg-linear-to-r from-tpv-accent to-blue-500">
+          CookFlow
+        </h2>
+        <p class="text-xs text-gray-500 font-bold tracking-wider uppercase mt-1">Backoffice</p>
+      </div>
+
+      <nav class="flex-1 p-4 space-y-2">
+        <a href="/admin" class="flex items-center gap-3 px-4 py-3 bg-tpv-accent text-white rounded-xl shadow-md transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+          <span class="font-semibold">Productos</span>
+        </a>
+        <a href="/admin/mesas" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+          <span class="font-semibold">Mesas</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-tpv-border">
+        <button id="logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all font-semibold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto bg-tpv-bg p-8">
+      <slot />
+    </main>
+
+    <script>
+      const backendUrl = 'http://127.0.0.1:8000';
+      
+      document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          try {
+            // Le decimos a la API de Nizar que destruya el token
+            await fetch(`${backendUrl}/api/logout`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            });
+          } catch (e) { console.error("Error al hacer logout en el server", e); }
+        }
+        
+        // Limpiamos el navegador y lo echamos al login
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        window.location.href = '/login';
+      });
+    </script>
+  </body>
+</html>
