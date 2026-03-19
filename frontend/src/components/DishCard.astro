@@ -13,36 +13,41 @@ const imageUrl = product.image
   ? `${backendUrl}/storage/products/${product.image}` 
   : 'https://placehold.co/600x400?text=Sin+Imagen';
 ---
-<article class="dish-card flex flex-col bg-tpv-surface border border-tpv-border rounded-2xl overflow-hidden hover:border-tpv-accent transition-all duration-300 shadow-sm hover:shadow-tpv-accent/20 group" data-category={product.category.name}>  
+<article 
+  class="dish-card flex flex-col bg-tpv-surface border border-tpv-border rounded-2xl overflow-hidden hover:border-tpv-accent transition-all duration-300 shadow-sm hover:shadow-tpv-accent/20 group" 
+  data-category={product.category.name}
+>  
   <div class="h-32 md:h-40 w-full overflow-hidden bg-tpv-bg relative">
     <img 
       src={imageUrl} 
       alt={product.name} 
-      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
       loading="lazy"
       onerror="this.src='https://placehold.co/600x400?text=Error+de+Imagen'"
     />
-    <span class="absolute top-2 right-2 bg-tpv-surface/90 backdrop-blur text-xs px-2 py-1 rounded-full border border-tpv-border font-medium">
+    <span class="absolute top-2 right-2 bg-tpv-surface/90 backdrop-blur text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg border border-tpv-border font-black text-tpv-text">
       {product.category.name}
     </span>
   </div>
 
   <div class="p-4 flex flex-col flex-1">
-    <h3 class="font-bold text-lg leading-tight mb-1 truncate" title={product.name}>
+    {/* ✅ Nombre del plato: FORZAMOS text-tpv-text */}
+    <h3 class="font-bold text-lg leading-tight mb-1 truncate text-tpv-text group-hover:text-tpv-accent transition-colors" title={product.name}>
       {product.name}
     </h3>
     
     <div class="mt-auto pt-3 flex items-center justify-between">
-      <span class="font-mono text-lg font-bold">
+      {/* ✅ Precio: En acento (Índigo) para que destaque */}
+      <span class="font-mono text-xl font-black text-tpv-accent">
         {parseFloat(product.price.toString()).toFixed(2)}€
       </span>
       
       <button 
-        class="add-to-cart-btn bg-tpv-accent hover:bg-tpv-accent-hover text-white p-2 rounded-xl transition-colors active:scale-95 flex items-center justify-center"
+        class="add-to-cart-btn bg-tpv-accent hover:bg-tpv-accent-hover text-white p-2.5 rounded-xl transition-all active:scale-90 flex items-center justify-center shadow-lg shadow-tpv-accent/20"
         data-product={JSON.stringify(product)}
         aria-label={`Añadir ${product.name} al pedido`}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
       </button>
@@ -61,7 +66,6 @@ const imageUrl = product.image
       
       btn.addEventListener('click', (e) => {
         const button = e.currentTarget;
-        
         if (!(button instanceof HTMLButtonElement)) return;
         
         const productData = JSON.parse(button.dataset.product || '{}');
@@ -72,5 +76,7 @@ const imageUrl = product.image
     });
   }
 
+  // Ejecutar en carga inicial y tras navegaciones de View Transitions si las usas
   setupCartButtons();
+  document.addEventListener('astro:after-swap', setupCartButtons);
 </script>
