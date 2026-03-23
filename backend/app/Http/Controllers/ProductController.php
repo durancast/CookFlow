@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -20,8 +21,15 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['required', 'numeric', 'min:0'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'image'       => ['nullable', 'string', 'max:255'],
+            'image'       => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = $file->getClientOriginalName();
+            $file->storeAs('products', $filename, 'public');
+            $data['image'] = $filename;
+        }
 
         $product = Product::create($data);
         $product->load('category');
@@ -36,8 +44,18 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['sometimes', 'numeric', 'min:0'],
             'category_id' => ['sometimes', 'integer', 'exists:categories,id'],
-            'image'       => ['nullable', 'string', 'max:255'],
+            'image'       => ['sometimes', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete('products/' . $product->image);
+            }
+            $file = $request->file('image');
+            $filename = $file->getClientOriginalName();
+            $file->storeAs('products', $filename, 'public');
+            $data['image'] = $filename;
+        }
 
         $product->update($data);
         $product->load('category');
@@ -47,8 +65,12 @@ class ProductController extends Controller
 
     public function destroy(Product $product): JsonResponse
     {
-        $product->delete();
+        // Al borrar el producto, borramos también su foto
+        if ($product->image) {
+            Storage::disk('public')->delete('products/' . $product->image);
+        }
 
+        $product->delete();
         return response()->json(null, 204);
     }
 }
