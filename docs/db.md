@@ -1,27 +1,53 @@
 # Diseño de la Base de Datos - CookFlow
-Nombre de la BBDD = cookflow_db
 
-Este documento describe la estructura relacional del backend para la gestión del menú.
+**Nombre de la BBDD:** `cookflow_db`  
+**Diseño realizado por:** Luis
 
-## Diagrama Entidad-Relación (1:N)
-
-La relación principal es de **uno a muchos** (1:N) entre las tablas `categories` y `products`. Esto permite que una categoría (ej: "Hamburguesas") agrupe múltiples productos, asegurando la integridad referencial.
+Este documento describe la arquitectura relacional completa del sistema CookFlow, incluyendo la gestión de menú, usuarios, infraestructura de sala (mesas) y el flujo de pedidos.
 
 ![Diagrama de Base de Datos](./images/diagrama_db.png)
 
-## Estructura de las Tablas
+## 📊 Diagrama Entidad-Relación
+El sistema se basa en un núcleo relacional donde el **Pedido (Order)** actúa como nexo entre el personal, las mesas y los productos.
 
-### Tabla: Categories
-- `id`: Identificador único (Primary Key).
-- `name`: Nombre de la categoría (bebidas, entrantes, hamburguesas, etc.).
-- `slug` : Versión del nombre para las URL's (hamburguesas)
+## 🛠 Estructura de las Tablas
 
-### Tabla: Products
-- `id`: Identificador único (Primary Key).
-- `name`: Nombre del producto.
-- `price`: Precio (Decimal 8,2).
-- `description`: Descripción del plato.
-- `image`: URL o ruta de la imagen del producto.
-- `category_id`: Clave foránea (Foreign Key) relacionada con categories.
----
-*Diseño realizado por: Luis*
+### 1. Usuarios (`users`)
+Gestiona el acceso y los roles del personal.
+* `id`: PK.
+* `name`: Nombre completo.
+* `email`: Correo único (login).
+* `role`: 'admin' o 'waiter' (camarero).
+* `password`: Hash de seguridad.
+
+### 2. Infraestructura de Sala (`tables`)
+Representación física del restaurante.
+* `id`: PK.
+* `number`: Número de mesa único.
+* `capacity`: Aforo máximo de la mesa.
+* `status`: Estado actual ('free', 'occupied', 'pending').
+
+### 3. Gestión de Menú (`categories` & `products`)
+* **Categories**: `id` (PK), `name` (ej: Carnes), `slug` (URL única).
+* **Products**: `id` (PK), `name`, `price` (Decimal 8,2), `description`, `image`, `category_id` (FK).
+
+### 4. Flujo de Pedidos (`orders` & `order_items`)
+* **Orders**: Registro del servicio.
+    * `id`: PK.
+    * `table_id`: FK hacia `tables`.
+    * `waiter_id`: FK hacia `users`.
+    * `status`: Estado del pedido ('pending', 'served', 'paid', 'cancelled').
+    * `total_price`: Suma total calculada.
+* **Order_Items**: Detalle de cada línea del pedido (Tabla pivote con datos extra).
+    * `id`: PK.
+    * `order_id`: FK hacia `orders`.
+    * `product_id`: FK hacia `products`.
+    * `quantity`: Cantidad pedida.
+    * `unit_price`: Precio en el momento del pedido.
+    * `notes`: Modificaciones (ej: "Sin cebolla").
+
+## 🔗 Relaciones Principales
+1. **1:N (Category -> Products):** Una categoría agrupa varios productos.
+2. **1:N (Table -> Orders):** Una mesa puede tener muchos pedidos a lo largo del tiempo, pero un pedido pertenece a una mesa.
+3. **1:N (User -> Orders):** Un camarero gestiona múltiples pedidos.
+4. **1:N (Order -> Order_Items):** Un pedido se desglosa en múltiples líneas de productos.

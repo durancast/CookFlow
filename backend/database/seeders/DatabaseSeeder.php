@@ -10,7 +10,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(UserSeeder::class);
+        $this->call([
+            UserSeeder::class,
+            TableSeeder::class,
+        ]);
 
         // 2. 4 categorías
         $entrants = Category::updateOrCreate(['slug' => 'entrantes'], ['name' => 'Entrantes']);
@@ -95,4 +98,3 @@ class DatabaseSeeder extends Seeder
         );
     }
 }
-
