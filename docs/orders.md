@@ -123,6 +123,81 @@ Se devuelve cuando la validación falla (campo faltante, producto inexistente, e
 
 ---
 
+---
+
+## PATCH /api/orders/{id}/status
+
+Actualiza el estado de una comanda. Usado por la cocina para avanzar el flujo del pedido. Ruta pública.
+
+### Request
+
+```
+PATCH /api/orders/{id}/status
+Content-Type: application/json
+```
+
+```json
+{
+  "status": "preparing"
+}
+```
+
+### Campos del Request
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `status` | string | Sí | Nuevo estado: `pending`, `preparing`, `ready` o `paid` |
+
+Flujo de estados habitual:
+
+```
+pending → preparing → ready → paid
+```
+
+---
+
+### Response 200 OK
+
+```json
+{
+  "id": 5,
+  "table_id": 2,
+  "status": "preparing",
+  "total_price": "21.00"
+}
+```
+
+### Response 422 Unprocessable Entity
+
+Se devuelve si el status no es un valor válido.
+
+```json
+{
+  "message": "The selected status is invalid.",
+  "errors": {
+    "status": ["The selected status is invalid."]
+  }
+}
+```
+
+### Response 404 Not Found
+
+Si la comanda no existe.
+
+---
+
+### Probar con Postman
+
+- **Method:** `PATCH`
+- **URL:** `http://localhost:8000/api/orders/5/status`
+- **Headers:** `Content-Type: application/json`, `Accept: application/json`
+- **Body:**
+  ```json
+  { "status": "preparing" }
+  ```
+
+---
+
 ## Probar con Postman
 
 ### Configuración

@@ -10,7 +10,7 @@ class TableController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Table::orderBy('number')->get());
+        return response()->json(Table::with('activeOrder')->orderBy('number')->get());
     }
 
     public function store(Request $request): JsonResponse

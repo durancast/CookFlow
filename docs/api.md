@@ -164,11 +164,10 @@ Authorization: Bearer {token}
 
 ## GET /api/tables
 
-Devuelve todas las mesas físicas del restaurante ordenadas por número. Requiere token de admin.
+Devuelve todas las mesas físicas del restaurante ordenadas por número, cada una con su comanda activa embebida. Ruta pública, no requiere autenticación.
 
 ```http
 GET /api/tables
-Authorization: Bearer {token}
 ```
 
 `200 OK`
@@ -179,13 +178,20 @@ Authorization: Bearer {token}
     "id": 1,
     "number": 1,
     "capacity": 4,
-    "status": "free"
+    "status": "free",
+    "active_order": null
   },
   {
     "id": 2,
     "number": 2,
     "capacity": 2,
-    "status": "occupied"
+    "status": "occupied",
+    "active_order": {
+      "id": 5,
+      "table_id": 2,
+      "status": "preparing",
+      "total_price": "21.00"
+    }
   }
 ]
 ```
@@ -197,7 +203,13 @@ Campos del objeto `table`:
 | `id` | integer | Identificador único |
 | `number` | integer | Número visible de la mesa (único) |
 | `capacity` | integer | Número de comensales |
-| `status` | string | Estado actual: `free`, `occupied`, `pending` |
+| `status` | string | Estado de la mesa: `free`, `occupied`, `pending` |
+| `active_order` | object \| null | Comanda activa (status ≠ `paid`). `null` si la mesa está libre |
+
+Notas para el frontend:
+
+- Usar `active_order !== null` para determinar si la mesa está ocupada en el mapa visual.
+- El campo `active_order.status` permite diferenciar si la cocina está preparando (`preparing`) o si está pendiente de cobro (`ready`).
 
 ---
 
@@ -274,9 +286,11 @@ Authorization: Bearer {token}
 | `/api/products` | POST | Sí | admin |
 | `/api/products/{id}` | PUT | Sí | admin |
 | `/api/products/{id}` | DELETE | Sí | admin |
-| `/api/tables` | GET | Sí | admin |
+| `/api/tables` | GET | No | — |
 | `/api/tables` | POST | Sí | admin |
 | `/api/tables/{id}` | DELETE | Sí | admin |
+| `/api/orders` | POST | No | — |
+| `/api/orders/{id}/status` | PATCH | No | cocina |
 | `/api/login` | POST | No | — |
 | `/api/logout` | POST | Sí | cualquiera |
 | `/api/me` | GET | Sí | cualquiera |
