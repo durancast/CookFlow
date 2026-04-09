@@ -5,12 +5,12 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 <AdminLayout title="Gestión de Productos">
   <header class="flex justify-between items-center mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-tpv-text font-sans">Catálogo de Productos</h1>
+      <h1 class="text-3xl font-bold text-tpv-text font-sans tracking-tight">Catálogo de Productos</h1>
       <p class="text-tpv-text-muted mt-1">Gestiona los platos y bebidas del restaurante</p>
     </div>
     
-    <button id="open-modal-btn" class="bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text px-6 py-3 rounded-xl font-bold shadow-lg shadow-tpv-accent/20 transition-all flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+    <button id="open-modal-btn" class="bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text px-6 py-3 rounded-xl font-bold shadow-lg shadow-tpv-accent/20 transition-all flex items-center gap-2 active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
       Añadir Producto
     </button>
   </header>
@@ -18,28 +18,23 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <div class="bg-tpv-surface border border-tpv-border rounded-2xl shadow-sm overflow-hidden">
     <table class="w-full text-left border-collapse">
       <thead>
-        <tr class="bg-tpv-bg border-b border-tpv-border">
-          <th class="p-4 font-semibold text-tpv-text-muted">Imagen</th>
-          <th class="p-4 font-semibold text-tpv-text-muted">Nombre</th>
-          <th class="p-4 font-semibold text-tpv-text-muted">Categoría</th>
-          <th class="p-4 font-semibold text-tpv-text-muted">Precio</th>
-          <th class="p-4 font-semibold text-tpv-text-muted text-right">Acciones</th>
+        <tr class="bg-tpv-bg/50 border-b border-tpv-border">
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Imagen</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Nombre</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Categoría</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Precio</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-right">Acciones</th>
         </tr>
       </thead>
       <tbody id="products-table-body" class="divide-y divide-tpv-border">
-        <tr>
-          <td colspan="5" class="p-8 text-center text-tpv-text-muted italic">
-            Cargando catálogo...
-          </td>
-        </tr>
-      </tbody>
+        </tbody>
     </table>
   </div>
 
   <div id="product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div id="modal-backdrop" class="absolute inset-0 bg-tpv-bg/80 backdrop-blur-sm transition-opacity"></div>
     
-    <div class="bg-tpv-surface w-full max-w-md rounded-3xl shadow-2xl z-10 p-6 border border-tpv-border">
+    <div class="bg-tpv-surface w-full max-w-md rounded-3xl shadow-2xl z-10 p-6 border border-tpv-border transform transition-all">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-tpv-text">Nuevo Producto</h2>
         <button id="close-modal-btn" class="text-tpv-text-muted hover:text-tpv-accent transition-colors">
@@ -49,36 +44,41 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
       <form id="add-product-form" class="space-y-4">
         <div>
-          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5">Nombre del plato</label>
+          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Nombre del plato</label>
           <input type="text" name="name" required 
-            class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all">
+            class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all placeholder:opacity-20" placeholder="Ej: Hamburguesa Trufada">
         </div>
         
         <div class="flex gap-4">
           <div class="w-1/2">
-            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5">Precio (€)</label>
+            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Precio (€)</label>
             <input type="number" step="0.01" name="price" required 
               class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all">
           </div>
           <div class="w-1/2">
-            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5">Categoría</label>
-            <select name="category_id" required 
-              class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all appearance-none cursor-pointer">
-              <option value="1">Entrantes</option>
-              <option value="2">Principales</option>
-              <option value="3">Bebidas</option>
-              <option value="4">Postres</option>
-            </select>
+            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Categoría</label>
+            <div class="relative">
+              <select name="category_id" required 
+                class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all appearance-none cursor-pointer">
+                <option value="1">Entrantes</option>
+                <option value="2">Principales</option>
+                <option value="3">Bebidas</option>
+                <option value="4">Postres</option>
+              </select>
+              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tpv-text-muted">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5">Imagen del producto</label>
+          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Imagen del producto</label>
           <input type="file" name="image" accept="image/*" 
             class="w-full text-sm text-tpv-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-tpv-accent file:text-tpv-text hover:file:bg-tpv-accent-hover transition-all cursor-pointer">
         </div>
 
-        <button type="submit" id="submit-product-btn" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text font-bold py-3.5 rounded-xl mt-6 transition-all shadow-lg shadow-tpv-accent/20 flex justify-center items-center">
+        <button type="submit" id="submit-product-btn" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text font-black py-4 rounded-xl mt-6 transition-all shadow-lg shadow-tpv-accent/20 flex justify-center items-center gap-2">
           <span id="btn-text-product">Guardar Producto</span>
         </button>
       </form>
@@ -87,51 +87,85 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </AdminLayout>
 
 <script>
-  const backendUrl = 'http://127.0.0.1:8000';
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+
+ declare global {
+    interface Window {
+      showToast: (message: string, type?: 'success' | 'error') => void;
+    }
+  }
 
   async function loadAdminProducts() {
+    const tbody = document.getElementById('products-table-body');
+    if (!tbody) return;
+
+    // 1. Inyectamos SKELETONS (Estado de carga animado)
+    const skeletonRow = `
+      <tr class="animate-pulse border-b border-tpv-border/50">
+        <td class="p-4"><div class="w-12 h-12 bg-tpv-bg rounded-lg"></div></td>
+        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-48"></div></td>
+        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-24"></div></td>
+        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-16"></div></td>
+        <td class="p-4 flex justify-end gap-2"><div class="h-8 bg-tpv-bg rounded w-16"></div><div class="h-8 bg-tpv-bg rounded w-16"></div></td>
+      </tr>
+    `;
+    tbody.innerHTML = skeletonRow.repeat(6);
+
     try {
       const response = await fetch(`${backendUrl}/api/products`);
       const products = await response.json();
-      const tbody = document.getElementById('products-table-body');
-      if (!tbody) return;
-
+      
       tbody.innerHTML = '';
 
+      // 2. ESTADO VACÍO (Por si no hay productos)
+      if (products.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="p-20 text-center">
+              <div class="flex flex-col items-center opacity-20">
+                <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                <p class="text-xl font-black uppercase tracking-widest text-tpv-text">No hay productos</p>
+                <p class="text-sm mt-2 text-tpv-text-muted italic">Pulsa en "Añadir Producto" para empezar tu carta</p>
+              </div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      // 3. RENDERIZADO DE PRODUCTOS REALES
       products.forEach((product: any) => {
         const imageUrl = product.image 
           ? `${backendUrl}/storage/products/${product.image}` 
           : 'https://placehold.co/100x100?text=Sin+Foto';
 
         const tr = document.createElement('tr');
-        // Usamos bg-tpv-bg/50 para el hover para que sea sutil
-        tr.className = "hover:bg-tpv-bg/50 transition-colors";
+        tr.className = "hover:bg-tpv-bg/40 transition-all duration-200 border-b border-tpv-border/50 last:border-0 group";
         tr.innerHTML = `
           <td class="p-4">
-            <img src="${imageUrl}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover border border-tpv-border">
+            <img src="${imageUrl}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover border border-tpv-border group-hover:scale-105 transition-transform">
           </td>
-          <td class="p-4 font-medium text-tpv-text">${product.name}</td>
+          <td class="p-4 font-bold text-tpv-text">${product.name}</td>
           <td class="p-4">
-            <span class="bg-tpv-bg px-3 py-1 rounded-full text-xs font-semibold border border-tpv-border text-tpv-text-muted">
+            <span class="bg-tpv-bg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-tpv-border text-tpv-text-muted">
               ${product.category.name}
             </span>
           </td>
-          <td class="p-4 font-mono font-bold text-tpv-accent">${parseFloat(String(product.price)).toFixed(2)}€</td>
+          <td class="p-4 font-mono font-black text-tpv-accent text-lg">${parseFloat(String(product.price)).toFixed(2)}€</td>
           <td class="p-4 text-right space-x-2">
-            <button class="text-tpv-accent hover:text-tpv-text font-medium px-3 py-1 bg-tpv-accent/10 rounded-lg transition-colors border border-tpv-accent/20">Editar</button>
-            <button class="text-tpv-text-muted hover:text-tpv-text font-medium px-3 py-1 bg-tpv-border rounded-lg transition-colors border border-tpv-border">Borrar</button>
+            <button class="text-tpv-accent hover:text-tpv-text font-bold text-xs uppercase px-3 py-1.5 bg-tpv-accent/10 rounded-lg transition-all border border-tpv-accent/20">Editar</button>
+            <button class="text-red-400 hover:text-white font-bold text-xs uppercase px-3 py-1.5 bg-red-500/10 rounded-lg transition-all border border-red-500/20">Borrar</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     } catch (error) {
-      console.error("Error:", error);
+      tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold uppercase tracking-tighter">⚠️ Error de conexión con el servidor</td></tr>`;
     }
   }
 
   loadAdminProducts();
 
-  // Lógica de Modal y Formulario (Sin cambios en lógica, solo IDs mantenidos)
+  // --- LÓGICA DEL MODAL ---
   const modal = document.getElementById('product-modal');
   const openBtn = document.getElementById('open-modal-btn');
   const closeBtn = document.getElementById('close-modal-btn');
@@ -152,25 +186,36 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   closeBtn?.addEventListener('click', () => toggleModal(false));
   backdrop?.addEventListener('click', () => toggleModal(false));
 
+  // --- ENVÍO DEL FORMULARIO CON FEEDBACK (TOAST) ---
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (submitBtn && btnText) {
       submitBtn.disabled = true;
-      btnText.textContent = 'Guardando...';
+      btnText.textContent = 'Procesando...';
     }
+
     const formData = new FormData(form);
     const token = localStorage.getItem('auth_token');
+
     try {
       const response = await fetch(`${backendUrl}/api/products`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
         body: formData
       });
+
       if (!response.ok) throw new Error('Error al guardar');
+
       toggleModal(false);
-      loadAdminProducts();
+      loadAdminProducts(); 
+      
+      // ✅ LANZAMOS EL TOAST (Asegúrate de tenerlo en AdminLayout)
+      if (window.showToast) {
+        window.showToast('¡Producto añadido con éxito!');
+      }
+
     } catch (error: any) {
-      alert(error.message);
+      if (window.showToast) window.showToast('No se pudo guardar el plato', 'error');
     } finally {
       if (submitBtn && btnText) {
         submitBtn.disabled = false;

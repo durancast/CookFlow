@@ -59,3 +59,9 @@ export function addNoteToItem(productId, note) {
 export function clearCart() {
     cartItems.set([]);
 }
+
+// 🗑️ Eliminar el producto de un solo clic
+export function removeFromCart(productId) {
+    const currentItems = cartItems.get();
+    cartItems.set(currentItems.filter(item => (item.id || item.name) !== productId));
+}
