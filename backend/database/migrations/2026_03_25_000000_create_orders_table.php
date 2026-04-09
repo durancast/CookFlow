@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('table_id')->constrained('tables');
-            $table->foreignId('waiter_id')->constrained('users');
+            $table->foreignId('table_id')->constrained('tables')->onDelete('cascade');
+            $table->foreignId('waiter_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'preparing', 'served', 'paid'])->default('pending');
             $table->decimal('total_price', 10, 2)->default(0);
         });

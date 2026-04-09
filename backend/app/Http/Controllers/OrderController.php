@@ -7,20 +7,20 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'table_id'              => 'required|integer|min:1',
-            'items'                 => 'required|array|min:1',
-            'items.*.product_id'    => 'required|integer|exists:products,id',
-            'items.*.quantity'      => 'required|integer|min:1',
-            'items.*.notes'         => 'nullable|string|max:255',
+            'table_id'          => 'required|integer|exists:tables,id',
+            'items'             => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer|exists:products,id',
+            'items.*.quantity'   => 'required|integer|min:1',
+            'items.*.notes'      => 'nullable|string|max:255',
         ]);
 
-        // Recalculate total from DB prices — never trust client-sent totals
         $productIds = collect($validated['items'])->pluck('product_id')->unique();
         $prices = Product::whereIn('id', $productIds)->pluck('price', 'id');
 
@@ -30,9 +30,10 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($validated, $prices, $total) {
             $order = Order::create([
-                'table_id' => $validated['table_id'],
-                'total'    => $total,
-                'status'   => 'pending',
+                'table_id'    => $validated['table_id'],
+                'waiter_id' => Auth::id() ?? 1,
+                'total_price' => $total,       
+                'status'      => 'pending',
             ]);
 
             foreach ($validated['items'] as $item) {
@@ -53,7 +54,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): JsonResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:pending,preparing,ready,paid'],
+            'status' => ['required', 'in:pending,preparing,served,paid'],
         ]);
 
         $order->update(['status' => $validated['status']]);
