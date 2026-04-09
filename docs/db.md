@@ -26,6 +26,7 @@ Representación física del restaurante.
 * `number`: Número de mesa único.
 * `capacity`: Aforo máximo de la mesa.
 * `status`: Estado actual ('free', 'occupied', 'pending').
+> **Campos Virtuales (API):** El sistema añade `qr_url` (generado dinámicamente) y `active_order` (relación calculada) al consultar este recurso.
 
 ### 3. Gestión de Menú (`categories` & `products`)
 * **Categories**: `id` (PK), `name` (ej: Carnes), `slug` (URL única).
@@ -36,7 +37,7 @@ Representación física del restaurante.
     * `id`: PK.
     * `table_id`: FK hacia `tables`.
     * `waiter_id`: FK hacia `users`.
-    * `status`: Estado del pedido ('pending', 'served', 'paid', 'cancelled').
+    * `status`: Estado del pedido ('pending', 'preparing', 'served', 'paid').
     * `total_price`: Suma total calculada.
 * **Order_Items**: Detalle de cada línea del pedido (Tabla pivote con datos extra).
     * `id`: PK.

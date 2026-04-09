@@ -211,7 +211,7 @@ Campos del objeto `table`:
 Notas para el frontend:
 
 - Usar `active_order !== null` para determinar si la mesa está ocupada en el mapa visual.
-- El campo `active_order.status` permite diferenciar si la cocina está preparando (`preparing`) o si está pendiente de cobro (`ready`).
+- El campo `active_order.status` permite diferenciar si la cocina está preparando (preparing) o si está pendiente de cobro (served).
 
 ---
 
@@ -293,6 +293,50 @@ GET /api/tables/1/qr
 
 Content-Type: image/svg+xml
 Cuerpo: Imagen vectorial (SVG) del código QR.
+
+
+## POST /api/orders
+
+Recibe el carrito del frontend y crea el pedido. El backend **recalcula el total** usando los precios de la BD por seguridad.
+
+**Request:**
+```http
+POST /api/orders
+```
+```json
+{
+  "table_id": 4,
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2,
+      "notes": "Sin cebolla"
+    }
+  ]
+}
+```
+
+`201 Created`
+
+```json
+{
+  "id": 7,
+  "table_id": 4,
+  "total_price": "25.00",
+  "status": "pending",
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2,
+      "unit_price": "12.50",
+      "notes": "Sin cebolla"
+    }
+  ]
+}
+```
+
+## PATCH /api/orders/{order}/status
+
 
 ## Resumen de rutas
 
