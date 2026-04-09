@@ -336,7 +336,22 @@ POST /api/orders
 ```
 
 ## PATCH /api/orders/{order}/status
+**Request:**
+```http
+PATCH /api/orders/7/status
+```
 
+```json
+{
+  "status": "served"
+}
+```
+| Estado | Descripción |
+| --- | --- |
+| `pending` | Recién creado |
+| `preparing` | En cocina |
+| `served` | Entregado en mesa |
+| `paid` | Pagado (Libera la mesa en /api/tables) |
 
 ## Resumen de rutas
 
@@ -351,8 +366,7 @@ POST /api/orders
 | `/api/tables/{id}` | DELETE | Sí | admin |
 | `/api/tables/{id}/qr` | GET | No | - |
 | `/api/orders` | POST | No | — |
-| `/api/orders/{id}/status` | PATCH | No | cocina |
-| `/api/login` | POST | No | — |
+| `/api/orders/{order}/status` | PATCH | No | cocina || `/api/login` | POST | No | — |
 | `/api/logout` | POST | Sí | cualquiera |
 | `/api/me` | GET | Sí | cualquiera |
 
