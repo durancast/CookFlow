@@ -5,12 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Table;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TableController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Table::with('activeOrder')->orderBy('number')->get());
+        $tables = Table::with('activeOrder')->orderBy('number')->get();
+
+        $tables->transform(function ($table) {
+            $table->qr_url = url("/api/tables/{$table->id}/qr");
+            return $table;
+        });
+
+        return response()->json($tables);
     }
 
     public function store(Request $request): JsonResponse
@@ -31,5 +39,15 @@ class TableController extends Controller
         $table->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function generateQr($id)
+    {
+        $table = Table::findOrFail($id);
+        $url = "https://cookflow.com/menu?table=" . $table->number;
+
+        $qrCode = QrCode::size(300)->margin(1)->generate($url);
+
+        return response($qrCode)->header('Content-Type', 'image/svg+xml');
     }
 }

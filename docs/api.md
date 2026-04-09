@@ -179,6 +179,7 @@ GET /api/tables
     "number": 1,
     "capacity": 4,
     "status": "free",
+    "qr_url": "http://localhost:8000/api/tables/1/qr",
     "active_order": null
   },
   {
@@ -204,6 +205,7 @@ Campos del objeto `table`:
 | `number` | integer | Número visible de la mesa (único) |
 | `capacity` | integer | Número de comensales |
 | `status` | string | Estado de la mesa: `free`, `occupied`, `pending` |
+| `qr_url` | string | URL absoluta para obtener la imagen del QR de la mesa |
 | `active_order` | object \| null | Comanda activa (status ≠ `paid`). `null` si la mesa está libre |
 
 Notas para el frontend:
@@ -277,6 +279,20 @@ Authorization: Bearer {token}
 `404 Not Found` — si la mesa no existe.
 
 ---
+---
+## GET /api/tables/{id}/qr
+
+Genera y devuelve el código QR único de la mesa en formato SVG. 
+El contenido del QR es la URL del frontend de clientes: `https://cookflow.com/menu?table={number}`.
+
+**Request:**
+```http
+GET /api/tables/1/qr
+```
+`200 OK`
+
+Content-Type: image/svg+xml
+Cuerpo: Imagen vectorial (SVG) del código QR.
 
 ## Resumen de rutas
 
@@ -289,6 +305,7 @@ Authorization: Bearer {token}
 | `/api/tables` | GET | No | — |
 | `/api/tables` | POST | Sí | admin |
 | `/api/tables/{id}` | DELETE | Sí | admin |
+| `/api/tables/{id}/qr` | GET | No | - |
 | `/api/orders` | POST | No | — |
 | `/api/orders/{id}/status` | PATCH | No | cocina |
 | `/api/login` | POST | No | — |
@@ -297,4 +314,4 @@ Authorization: Bearer {token}
 
 ---
 
-Documentación actualizada el 2026-03-19
+Documentación actualizada el 2026-04-09

@@ -1,3 +1,4 @@
+<?php
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -9,6 +10,9 @@ Route::get('/products', [ProductController::class, 'index']);
 
 // Mesas — mapa de estado para el frontend
 Route::get('/tables', [TableController::class, 'index']);
+
+// Generador de la imagen SVG
+Route::get('/tables/{id}/qr', [TableController::class, 'generateQr']);
 
 // Pedidos — público (el camarero envía desde la tablet sin login)
 Route::post('/orders', [OrderController::class, 'store']);
