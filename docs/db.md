@@ -30,15 +30,15 @@ Representación física del restaurante.
 
 ### 3. Gestión de Menú (`categories` & `products`)
 * **Categories**: `id` (PK), `name` (ej: Carnes), `slug` (URL única).
-* **Products**: `id` (PK), `name`, `price` (Decimal 8,2), `description`, `image`, `category_id` (FK).
+* **Products**: `id` (PK), `name`, `price` (Decimal 8,2)->Precio unitario del catálogo, `description`, `image`, `category_id` (FK).
 
 ### 4. Flujo de Pedidos (`orders` & `order_items`)
 * **Orders**: Registro del servicio.
     * `id`: PK.
-    * `table_id`: FK hacia `tables`.
-    * `waiter_id`: FK hacia `users`.
+    * `table_id`: FK hacia `tables`(onDelete: cascade).
+    * `waiter_id`: FK hacia `users`(onDelete: cascade).
     * `status`: Estado del pedido ('pending', 'preparing', 'served', 'paid').
-    * `total_price`: Suma total calculada.
+    * `total_price`: Decimal (10,2). Suma total calculada de forma segura en el backend.
 * **Order_Items**: Detalle de cada línea del pedido (Tabla pivote con datos extra).
     * `id`: PK.
     * `order_id`: FK hacia `orders`.

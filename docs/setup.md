@@ -142,3 +142,7 @@ Permisos de Storage: En Windows no suele fallar, pero si Laravel da error de esc
 ```bash
 php artisan storage:link
 ```
+### 🛠️ Requisito adicional para QRs (Backend)
+El sistema genera códigos QR dinámicos y requiere la librería **GD** de PHP:
+1. En `php.ini`, busca `;extension=gd` y quita el `;`.
+2. Reinicia tu servidor (Apache/Laragon).
