@@ -67,7 +67,8 @@ import Layout from '../layouts/Layout.astro';
 
 <script>
   // Tu lógica de TS se mantiene igual porque estaba perfecta...
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
+  console.log("Conectando a:", `${backendUrl}/api/login`);
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form') as HTMLFormElement;

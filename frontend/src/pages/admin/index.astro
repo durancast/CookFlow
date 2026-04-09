@@ -87,7 +87,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </AdminLayout>
 
 <script>
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
 
  declare global {
     interface Window {

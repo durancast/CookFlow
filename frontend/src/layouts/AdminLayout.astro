@@ -95,7 +95,7 @@ const { title } = Astro.props;
     </script>
 
     <script>
-      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
       
       document.getElementById('logout-btn')?.addEventListener('click', async () => {
         const token = localStorage.getItem('auth_token');

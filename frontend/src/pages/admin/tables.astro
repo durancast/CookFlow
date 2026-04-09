@@ -1,0 +1,161 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Gestión de Mesas">
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-tpv-text tracking-tight font-sans">Gestión de Mesas</h1>
+      <p class="text-tpv-text-muted mt-1 font-medium">Configura la distribución de tu sala</p>
+    </div>
+    
+    <button id="open-modal-btn" class="bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text px-6 py-3 rounded-xl font-bold shadow-lg shadow-tpv-accent/20 transition-all flex items-center gap-2 active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4" /></svg>
+      Añadir Mesa
+    </button>
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="tables-grid">
+    </div>
+
+  <div id="table-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div id="modal-backdrop" class="absolute inset-0 bg-tpv-bg/80 backdrop-blur-sm transition-opacity"></div>
+    
+    <div class="bg-tpv-surface w-full max-w-sm rounded-3xl shadow-2xl z-10 p-6 border border-tpv-border transform transition-all">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-tpv-text">Nueva Mesa</h2>
+        <button id="close-modal-btn" class="text-tpv-text-muted hover:text-tpv-accent transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+      </div>
+
+      <form id="add-table-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Número de Mesa</label>
+          <input type="number" name="number" required min="1"
+            class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all" placeholder="Ej: 10">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Capacidad (Pax)</label>
+          <input type="number" name="capacity" defaultValue="2" min="1" required 
+            class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all">
+        </div>
+
+        <button type="submit" id="submit-table-btn" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text font-black py-4 rounded-xl mt-6 transition-all shadow-lg shadow-tpv-accent/20 flex justify-center items-center gap-2">
+          <span id="btn-text-table">Guardar Mesa</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+
+  // 1. Definimos la interfaz global para Toasts y TypeScript
+  declare global {
+    interface Window {
+      showToast: (message: string, type?: 'success' | 'error') => void;
+    }
+  }
+
+  // 2. Colores de estado (Sincronizados con tu Laravel migration)
+  const statusColors: Record<string, string> = {
+    free: 'text-green-400 bg-green-500/10 border-green-500/20',
+    occupied: 'text-tpv-accent bg-tpv-accent/10 border-tpv-accent/20',
+    pending: 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+  };
+
+  async function loadTables() {
+    const grid = document.getElementById('tables-grid');
+    if (!grid) return;
+
+    // SKELETONS
+    const skeleton = `<div class="bg-tpv-surface border border-tpv-border rounded-3xl p-6 animate-pulse h-40"></div>`;
+    grid.innerHTML = skeleton.repeat(4);
+
+    try {
+      const response = await fetch(`${backendUrl}/api/tables`);
+      const tables = await response.json();
+      grid.innerHTML = '';
+
+      if (tables.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-20 text-center opacity-20">
+             <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke-width="1" /></svg>
+             <p class="text-xl font-black uppercase tracking-widest">No hay mesas</p>
+          </div>`;
+        return;
+      }
+
+      tables.forEach((table: any) => {
+        const card = document.createElement('div');
+        const colorClass = statusColors[table.status] || 'text-tpv-text-muted bg-tpv-border';
+        
+        card.className = "bg-tpv-surface border border-tpv-border rounded-3xl p-6 hover:border-tpv-accent transition-all group relative";
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-3 bg-tpv-bg rounded-2xl text-tpv-accent shadow-inner">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-tighter px-3 py-1 rounded-full border ${colorClass}">
+              ${table.status}
+            </span>
+          </div>
+          <h3 class="text-2xl font-black text-tpv-text">Mesa ${table.number}</h3>
+          <p class="text-xs font-bold text-tpv-text-muted uppercase tracking-widest mt-1">Capacidad: ${table.capacity} pers.</p>
+          
+          <button class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-2">
+             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" /></svg>
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    } catch (e) {
+      grid.innerHTML = `<p class="col-span-full text-red-400 font-bold text-center">⚠️ Error cargando mesas</p>`;
+    }
+  }
+
+  // --- LOGICA MODAL ---
+  const modal = document.getElementById('table-modal');
+  const openBtn = document.getElementById('open-modal-btn');
+  const closeBtn = document.getElementById('close-modal-btn');
+  const form = document.getElementById('add-table-form') as HTMLFormElement;
+
+  function toggleModal(show: boolean) {
+    if (show) modal?.classList.remove('hidden');
+    else { modal?.classList.add('hidden'); form.reset(); }
+  }
+
+  openBtn?.addEventListener('click', () => toggleModal(true));
+  closeBtn?.addEventListener('click', () => toggleModal(false));
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const token = localStorage.getItem('auth_token');
+
+    try {
+      const response = await fetch(`${backendUrl}/api/tables`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json' 
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+
+      if (!response.ok) throw new Error();
+
+      toggleModal(false);
+      loadTables();
+      window.showToast('¡Mesa añadida!');
+    } catch (e) {
+      window.showToast('Error al crear mesa', 'error');
+    }
+  });
+
+  loadTables();
+</script>
