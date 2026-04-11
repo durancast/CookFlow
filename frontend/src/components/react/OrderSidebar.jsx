@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useStore } from '@nanostores/react';
-import { cartItems, updateQuantity, addNoteToItem, clearCart } from '../../store/cartStore.js';
+// IMPORTANTE: Hemos añadido selectedTable aquí abajo
+import { cartItems, updateQuantity, addNoteToItem, clearCart, selectedTable } from '../../store/cartStore.js';
+// IMPORTANTE: Descomenta la línea de abajo cuando crees el archivo printer.js del paso anterior
+// import { printKitchenTicket } from '../../utils/printer.js';
 
 export default function OrderSidebar() {
   const items = useStore(cartItems);
+  const currentTable = useStore(selectedTable); // 👈 Escuchamos la mesa seleccionada
   const [isSending, setIsSending] = useState(false);
   
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -17,16 +21,23 @@ export default function OrderSidebar() {
       return;
     }
 
+    // 🚨 VALIDACIÓN: Si no hay mesa, no dejamos enviar
+    if (!currentTable) {
+      if (window.showToast) window.showToast('⚠️ Selecciona una mesa antes de enviar', 'error');
+      // Aquí podrías incluso forzar que se abra el modal de mesas
+      return;
+    }
+
     setIsSending(true);
 
     const orderData = {
-      table_id: 1, // Milestone 3: Aquí irá el ID dinámico
+      table_id: currentTable.id, // 👈 Ya es 100% dinámico
       items: items.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
-        note: item.note || ''
-      })),
-      total: total
+        notes: item.note || '' // 👈 Cambiado a 'notes' para Laravel
+      }))
+      // Hemos quitado el 'total' porque tu Laravel ya lo calcula de forma segura
     };
 
     console.log("📦 Datos a enviar a Laravel:", orderData);
@@ -47,17 +58,26 @@ export default function OrderSidebar() {
       if (response.ok || response.status === 201) {
         // 🏆 ÉXITO
         if (window.showToast) window.showToast('¡Comanda enviada a cocina! 👨‍🍳');
-        clearCart(); // Se limpia el carrito aquí
+        
+        // 🖨️ Imprimir ticket (Descomenta cuando tengas el printer.js)
+        // printKitchenTicket(items, currentTable.number);
+
+        clearCart(); 
       } else {
-        // 🚨 ERROR DEL SERVIDOR
-        const errorData = await response.json();
-        console.error("🚨 Laravel rechazó el pedido:", errorData);
-        throw new Error(errorData.message || 'Error al procesar comanda');
+        // 🚨 ERROR DEL SERVIDOR (Blindado contra HTML)
+        const textResponse = await response.text();
+        try {
+          const errorData = JSON.parse(textResponse);
+          console.error("🚨 Laravel rechazó el pedido:", errorData);
+          throw new Error(errorData.message || 'Error al procesar comanda');
+        } catch(e) {
+          throw new Error('Error de servidor (posible 500 o 404)');
+        }
       }
 
     } catch (error) {
       console.error("🚨 Error capturado en el catch:", error);
-      if (window.showToast) window.showToast('Hubo un problema con el envío', 'error');
+      if (window.showToast) window.showToast(error.message || 'Hubo un problema con el envío', 'error');
     } finally {
       setIsSending(false);
     }
@@ -69,8 +89,13 @@ export default function OrderSidebar() {
       <header className="shrink-0 p-6 border-b border-tpv-border bg-tpv-surface">
         <h2 className="text-xl font-bold flex items-center justify-between text-tpv-text">
           <span>Comanda Actual</span>
-          <span className="bg-tpv-accent text-white text-[10px] py-1 px-3 rounded-full font-black shadow-lg shadow-tpv-accent/20 uppercase tracking-widest">
-            Mesa --
+          {/* 👇 Mostramos el número real de la mesa */}
+          <span className={`text-[10px] py-1 px-3 rounded-full font-black shadow-lg uppercase tracking-widest ${
+            currentTable 
+              ? 'bg-tpv-accent text-white shadow-tpv-accent/20' 
+              : 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
+          }`}>
+            {currentTable ? `Mesa ${currentTable.number}` : 'SIN MESA'}
           </span>
         </h2>
       </header>

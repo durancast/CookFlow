@@ -7,7 +7,7 @@ import type { Product } from '../types/api';
 
 const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
-// 1. Petición al backend
+// 1. Petición al backend para productos
 const res = await fetch(`${backendUrl}/api/products`);
 const products: Product[] = await res.json();
 
@@ -69,16 +69,34 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
     </aside>
 
   </div>
+
+  <div id="select-table-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-tpv-bg/90 backdrop-blur-md transition-opacity">
+    <div class="bg-tpv-surface w-full max-w-4xl rounded-3xl shadow-2xl p-8 border border-tpv-border animate-in fade-in zoom-in-95 duration-200">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-black text-tpv-text mb-2">Selecciona una Mesa</h2>
+        <p class="text-tpv-text-muted font-bold uppercase tracking-widest text-sm">¿A qué mesa le vamos a tomar nota?</p>
+      </div>
+
+      <div id="modal-tables-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="col-span-full text-center p-10 animate-pulse text-tpv-accent font-bold tracking-widest uppercase">
+          Cargando mapa de sala...
+        </div>
+      </div>
+    </div>
+  </div>
 </Layout>
 
 <script>
-  import { cartItems } from '../store/cartStore.js';
+  import { cartItems, selectedTable } from '../store/cartStore.js';
+
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
   document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- LÓGICA DEL CARRITO (La que ya tenías) ---
     const countEl = document.getElementById('mobile-cart-count');
     const totalEl = document.getElementById('mobile-cart-total');
 
-    // Suscripción al carrito (Nano Stores)
     cartItems.subscribe((items: readonly any[]) => {
       const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
       const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -93,7 +111,7 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
       }
     });
 
-    // Lógica de Filtrado corregida con colores corporativos
+    // --- LÓGICA DE FILTRADO (La que ya tenías) ---
     const categoryButtons = document.querySelectorAll('.category-btn');
     const dishCards = document.querySelectorAll('.dish-card'); 
     
@@ -102,7 +120,6 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
         const buttonText = button.textContent?.trim().toLowerCase();
         const filterCategory = buttonText === 'todos' ? 'all' : buttonText;
 
-        // Filtrar tarjetas
         dishCards.forEach(card => {
           const cardCategory = (card.getAttribute('data-category') || '').trim().toLowerCase();
           if (filterCategory === 'all' || cardCategory === filterCategory) {
@@ -114,7 +131,6 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
           }
         });
 
-        // Actualizar estilos de botones (Usando tu paleta)
         categoryButtons.forEach(btn => {
           btn.classList.remove('bg-tpv-accent', 'text-white', 'border-tpv-accent', 'shadow-lg');
           btn.classList.add('bg-tpv-bg', 'text-tpv-text-muted', 'border-tpv-border');
@@ -124,5 +140,67 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
         button.classList.remove('bg-tpv-bg', 'text-tpv-text-muted', 'border-tpv-border');
       });
     });
+
+    // --- 🔥 NUEVO: LÓGICA DE SELECCIÓN DE MESAS ---
+    const tableStatusStyles: Record<string, string> = {
+      free: 'bg-green-500/10 border-green-500/50 text-green-400 hover:bg-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]',
+      occupied: 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
+      pending: 'bg-amber-500/10 border-amber-500/50 text-amber-400 hover:bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+    };
+
+    const tableStatusText: Record<string, string> = {
+      free: 'Libre',
+      occupied: 'Ocupada',
+      pending: 'Esperando plato'
+    };
+
+    async function loadTableSelection() {
+      const container = document.getElementById('modal-tables-grid');
+      if (!container) return;
+
+      try {
+        const response = await fetch(`${backendUrl}/api/tables`);
+        const tables = await response.json();
+
+        container.innerHTML = tables.map((table: any) => {
+          const style = tableStatusStyles[table.status] || tableStatusStyles.free;
+          const text = tableStatusText[table.status] || 'Desconocido';
+          
+          return `
+            <button 
+              onclick="window.selectTable(${table.id}, ${table.number})"
+              class="flex flex-col items-center justify-center p-8 rounded-3xl border-2 transition-all active:scale-95 cursor-pointer ${style}"
+            >
+              <span class="text-4xl font-black mb-3 font-mono">Mesa ${table.number}</span>
+              <span class="text-[10px] uppercase font-black tracking-widest px-4 py-1.5 rounded-full border border-current opacity-90 bg-tpv-bg/50 backdrop-blur-sm">
+                ${text}
+              </span>
+            </button>
+          `;
+        }).join('');
+      } catch (error) {
+        container.innerHTML = `<p class="col-span-full text-center text-red-500 font-bold uppercase tracking-widest">Error al cargar las mesas.</p>`;
+      }
+    }
+
+    // Función global para seleccionar la mesa
+    (window as any).selectTable = (id: number, number: number) => {
+      // 1. Guardamos en el Store (para que React lo lea)
+      selectedTable.set({ id, number });
+      
+      // 2. Ocultamos el modal
+      const modal = document.getElementById('select-table-modal');
+      if (modal) {
+        modal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+        setTimeout(() => modal.classList.add('hidden'), 200); // Animación de salida
+      }
+      
+      if ((window as any).showToast) {
+        (window as any).showToast(`Mesa ${number} seleccionada 📝`);
+      }
+    };
+
+    // Cargamos las mesas al iniciar la app
+    loadTableSelection();
   });
 </script>

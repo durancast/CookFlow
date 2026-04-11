@@ -2,8 +2,12 @@ import { atom } from 'nanostores';
 
 export const cartItems = atom([]);
 
+/** @type {import('nanostores').WritableAtom<{id: number, number: number} | null>} */
+export const selectedTable = atom(null);
+
 // ➕ Añadir producto
 export function addToCart(product) {
+    console.log("Intentando añadir al carrito el objeto:", product);
     console.log("Intentando añadir al carrito el objeto:", product);
 
     const productId = product.id; 
