@@ -65,7 +65,7 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
     </main>
 
     <aside class="hidden lg:flex shrink-0 w-80 xl:w-96 border-l border-tpv-border h-full bg-tpv-bg z-40">
-      <OrderSidebar client:load />
+      <OrderSidebar client:only="react" />
     </aside>
 
   </div>

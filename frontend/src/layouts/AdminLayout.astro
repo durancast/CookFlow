@@ -1,11 +1,13 @@
 ---
-// src/layouts/AdminLayout.astro
 interface Props {
   title: string;
 }
 
 import '../styles/global.css';
 const { title } = Astro.props;
+
+// 1. Leemos la ruta actual en la que estamos navegando
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -42,12 +44,26 @@ const { title } = Astro.props;
       </div>
 
       <nav class="flex-1 p-4 space-y-2">
-        <a href="/admin" class="flex items-center gap-3 px-4 py-3 bg-tpv-accent text-white rounded-xl shadow-lg shadow-tpv-accent/20 transition-all">
+        <a 
+          href="/admin" 
+          class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            currentPath === '/admin' || currentPath === '/admin/'
+              ? 'bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
+              : 'text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text'
+          }`}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
           <span class="font-bold text-sm">Productos</span>
         </a>
         
-        <a href="/admin/mesas" class="flex items-center gap-3 px-4 py-3 text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text rounded-xl transition-all">
+        <a 
+          href="/admin/mesas" 
+          class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            currentPath === '/admin/mesas' || currentPath === '/admin/mesas/'
+              ? 'bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
+              : 'text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text'
+          }`}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
           <span class="font-bold text-sm">Mesas</span>
         </a>
@@ -72,7 +88,6 @@ const { title } = Astro.props;
 
         const toast = document.createElement('div');
         
-        // Estilos según éxito o error usando tu paleta
         const bgColor = type === 'success' ? 'bg-tpv-accent' : 'bg-red-500';
         const icon = type === 'success' ? '✅' : '❌';
 
@@ -81,12 +96,10 @@ const { title } = Astro.props;
         
         container.appendChild(toast);
 
-        // Forzar reflujo para la animación de entrada
         setTimeout(() => {
           toast.classList.remove('translate-y-4', 'opacity-0');
         }, 10);
 
-        // Auto-eliminar después de 3 segundos
         setTimeout(() => {
           toast.classList.add('opacity-0', 'translate-y-2');
           setTimeout(() => toast.remove(), 300);
@@ -95,7 +108,7 @@ const { title } = Astro.props;
     </script>
 
     <script>
-      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
+      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
       
       document.getElementById('logout-btn')?.addEventListener('click', async () => {
         const token = localStorage.getItem('auth_token');

@@ -10,6 +10,8 @@ Route::get('/products', [ProductController::class, 'index']);
 
 // Mesas — mapa de estado para el frontend
 Route::get('/tables', [TableController::class, 'index']);
+// Añade esta línea para permitir la creación de mesas
+Route::post('/tables', [TableController::class, 'store']);
 
 // Generador de la imagen SVG
 Route::get('/tables/{id}/qr', [TableController::class, 'generateQr']);

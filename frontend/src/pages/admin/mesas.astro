@@ -38,7 +38,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         
         <div>
           <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Capacidad (Pax)</label>
-          <input type="number" name="capacity" defaultValue="2" min="1" required 
+          <input type="number" name="capacity" value="2" min="1" required 
             class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all">
         </div>
 
@@ -51,16 +51,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </AdminLayout>
 
 <script>
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+  console.log("Conectando a API de Mesas en:", backendUrl);
 
-  // 1. Definimos la interfaz global para Toasts y TypeScript
   declare global {
     interface Window {
       showToast: (message: string, type?: 'success' | 'error') => void;
     }
   }
 
-  // 2. Colores de estado (Sincronizados con tu Laravel migration)
   const statusColors: Record<string, string> = {
     free: 'text-green-400 bg-green-500/10 border-green-500/20',
     occupied: 'text-tpv-accent bg-tpv-accent/10 border-tpv-accent/20',
@@ -71,7 +70,6 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     const grid = document.getElementById('tables-grid');
     if (!grid) return;
 
-    // SKELETONS
     const skeleton = `<div class="bg-tpv-surface border border-tpv-border rounded-3xl p-6 animate-pulse h-40"></div>`;
     grid.innerHTML = skeleton.repeat(4);
 
@@ -93,7 +91,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         const card = document.createElement('div');
         const colorClass = statusColors[table.status] || 'text-tpv-text-muted bg-tpv-border';
         
-        card.className = "bg-tpv-surface border border-tpv-border rounded-3xl p-6 hover:border-tpv-accent transition-all group relative";
+        card.className = "bg-tpv-surface border border-tpv-border rounded-3xl p-6 hover:border-tpv-accent transition-all group relative animate-fade-in";
         card.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div class="p-3 bg-tpv-bg rounded-2xl text-tpv-accent shadow-inner">
@@ -130,13 +128,27 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
   openBtn?.addEventListener('click', () => toggleModal(true));
   closeBtn?.addEventListener('click', () => toggleModal(false));
+  document.getElementById('modal-backdrop')?.addEventListener('click', () => toggleModal(false));
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(form);
     const token = localStorage.getItem('auth_token');
 
+    // 🔥 CAMBIO CLAVE 1: Convertimos explícitamente a números enteros
+    const tableData = {
+      number: parseInt(formData.get('number') as string, 10),
+      capacity: parseInt(formData.get('capacity') as string, 10)
+    };
+
+    const submitBtn = document.getElementById('submit-table-btn') as HTMLButtonElement;
+    const btnText = document.getElementById('btn-text-table');
+
     try {
+      // Estado de carga visual
+      if (submitBtn) submitBtn.disabled = true;
+      if (btnText) btnText.textContent = 'Guardando...';
+
       const response = await fetch(`${backendUrl}/api/tables`, {
         method: 'POST',
         headers: { 
@@ -144,16 +156,39 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           'Content-Type': 'application/json',
           'Accept': 'application/json' 
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(tableData)
       });
 
-      if (!response.ok) throw new Error();
+      // 🔥 CAMBIO CLAVE 2: Leemos el error exacto que envía Laravel
+      if (!response.ok) {
+        const textResponse = await response.text();
+        let errorMessage = `Error en el servidor (Código ${response.status})`;
+        
+        try {
+          // Intentamos leerlo como JSON (si es un error normal de validación 422)
+          const errorData = JSON.parse(textResponse);
+          console.error("🚨 Laravel rechazó la mesa:", errorData);
+          errorMessage = errorData.message || 'Error de validación';
+        } catch (parseError) {
+          // Si explota, es porque Laravel mandó HTML (Error 500 o 404)
+          console.error("🚨 Laravel devolvió un error HTML grave. Abre la pestaña RED (Network) para ver los detalles.");
+        }
+        
+        throw new Error(errorMessage);
+      }
 
+      // Éxito
       toggleModal(false);
       loadTables();
-      window.showToast('¡Mesa añadida!');
-    } catch (e) {
-      window.showToast('Error al crear mesa', 'error');
+      if (window.showToast) window.showToast('¡Mesa añadida correctamente!', 'success');
+      
+    } catch (e: any) {
+      console.error("Error al crear:", e);
+      if (window.showToast) window.showToast(e.message || 'Error al crear mesa', 'error');
+    } finally {
+      // Restaurar el botón
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = 'Guardar Mesa';
     }
   });
 
