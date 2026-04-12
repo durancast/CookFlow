@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
+    public $timestamps = false;
     protected $fillable = ['order_id', 'product_id', 'quantity', 'unit_price', 'notes'];
 
     public function product(): BelongsTo

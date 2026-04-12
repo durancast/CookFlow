@@ -26,59 +26,44 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-right">Acciones</th>
         </tr>
       </thead>
-      <tbody id="products-table-body" class="divide-y divide-tpv-border">
-        </tbody>
+      <tbody id="products-table-body" class="divide-y divide-tpv-border"></tbody>
     </table>
   </div>
 
-  <div id="product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div id="product-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="display: none;">
     <div id="modal-backdrop" class="absolute inset-0 bg-tpv-bg/80 backdrop-blur-sm transition-opacity"></div>
-    
     <div class="bg-tpv-surface w-full max-w-md rounded-3xl shadow-2xl z-10 p-6 border border-tpv-border transform transition-all">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-tpv-text">Nuevo Producto</h2>
-        <button id="close-modal-btn" class="text-tpv-text-muted hover:text-tpv-accent transition-colors">
+        <h2 id="modal-title" class="text-2xl font-bold text-tpv-text">Nuevo Producto</h2>
+        <button id="close-modal-btn" type="button" class="text-tpv-text-muted hover:text-tpv-accent transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-
       <form id="add-product-form" class="space-y-4">
         <div>
           <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Nombre del plato</label>
-          <input type="text" name="name" required 
-            class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all placeholder:opacity-20" placeholder="Ej: Hamburguesa Trufada">
+          <input type="text" name="name" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-tpv-accent transition-all">
         </div>
-        
         <div class="flex gap-4">
           <div class="w-1/2">
             <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Precio (€)</label>
-            <input type="number" step="0.01" name="price" required 
-              class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all">
+            <input type="number" step="0.01" name="price" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none">
           </div>
           <div class="w-1/2">
             <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Categoría</label>
-            <div class="relative">
-              <select name="category_id" required 
-                class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-tpv-accent outline-none transition-all appearance-none cursor-pointer">
-                <option value="1">Entrantes</option>
-                <option value="2">Principales</option>
-                <option value="3">Bebidas</option>
-                <option value="4">Postres</option>
-              </select>
-              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tpv-text-muted">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-            </div>
+            <select name="category_id" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none cursor-pointer">
+              <option value="1">Entrantes</option>
+              <option value="2">Principales</option>
+              <option value="3">Bebidas</option>
+              <option value="4">Postres</option>
+            </select>
           </div>
         </div>
-
         <div>
-          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Imagen del producto</label>
-          <input type="file" name="image" accept="image/*" 
-            class="w-full text-sm text-tpv-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-tpv-accent file:text-tpv-text hover:file:bg-tpv-accent-hover transition-all cursor-pointer">
+          <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase tracking-wide">Imagen (opcional)</label>
+          <input type="file" name="image" accept="image/*" class="w-full text-sm text-tpv-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-tpv-accent file:text-white cursor-pointer">
         </div>
-
-        <button type="submit" id="submit-product-btn" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-tpv-text font-black py-4 rounded-xl mt-6 transition-all shadow-lg shadow-tpv-accent/20 flex justify-center items-center gap-2">
+        <button type="submit" id="submit-product-btn" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black py-4 rounded-xl mt-6 transition-all shadow-lg shadow-tpv-accent/20">
           <span id="btn-text-product">Guardar Producto</span>
         </button>
       </form>
@@ -87,140 +72,109 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </AdminLayout>
 
 <script>
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
+  interface Category { id: number; name: string; }
+  interface Product { id: number; name: string; price: number; category_id: number; image: string | null; category: Category; }
 
- declare global {
-    interface Window {
-      showToast: (message: string, type?: 'success' | 'error') => void;
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+  let isEditing = false;
+  let currentProductId: string | null = null;
+
+  const modal = document.getElementById('product-modal');
+  const form = document.getElementById('add-product-form') as HTMLFormElement | null;
+  const modalTitle = document.getElementById('modal-title');
+  const btnText = document.getElementById('btn-text-product');
+
+  function toggleModal(show: boolean, editMode = false) {
+    if (!modal || !form) return;
+    if (show) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      modal.style.display = 'flex';
+      if (!editMode) {
+        isEditing = false;
+        currentProductId = null;
+        form.reset();
+        if (modalTitle) modalTitle.textContent = "Nuevo Producto";
+        if (btnText) btnText.textContent = "Guardar Producto";
+      }
+    } else {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.style.display = 'none';
+      form.reset();
     }
   }
+
+  document.getElementById('open-modal-btn')?.addEventListener('click', () => toggleModal(true));
+  document.getElementById('close-modal-btn')?.addEventListener('click', () => toggleModal(false));
+  document.getElementById('modal-backdrop')?.addEventListener('click', () => toggleModal(false));
 
   async function loadAdminProducts() {
     const tbody = document.getElementById('products-table-body');
     if (!tbody) return;
-
-    // 1. Inyectamos SKELETONS (Estado de carga animado)
-    const skeletonRow = `
-      <tr class="animate-pulse border-b border-tpv-border/50">
-        <td class="p-4"><div class="w-12 h-12 bg-tpv-bg rounded-lg"></div></td>
-        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-48"></div></td>
-        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-24"></div></td>
-        <td class="p-4"><div class="h-4 bg-tpv-bg rounded w-16"></div></td>
-        <td class="p-4 flex justify-end gap-2"><div class="h-8 bg-tpv-bg rounded w-16"></div><div class="h-8 bg-tpv-bg rounded w-16"></div></td>
-      </tr>
-    `;
-    tbody.innerHTML = skeletonRow.repeat(6);
-
     try {
       const response = await fetch(`${backendUrl}/api/products`);
-      const products = await response.json();
-      
+      const products: Product[] = await response.json();
       tbody.innerHTML = '';
-
-      // 2. ESTADO VACÍO (Por si no hay productos)
-      if (products.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="p-20 text-center">
-              <div class="flex flex-col items-center opacity-20">
-                <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                <p class="text-xl font-black uppercase tracking-widest text-tpv-text">No hay productos</p>
-                <p class="text-sm mt-2 text-tpv-text-muted italic">Pulsa en "Añadir Producto" para empezar tu carta</p>
-              </div>
-            </td>
-          </tr>`;
-        return;
-      }
-
-      // 3. RENDERIZADO DE PRODUCTOS REALES
-      products.forEach((product: any) => {
-        const imageUrl = product.image 
-          ? `${backendUrl}/storage/products/${product.image}` 
-          : 'https://placehold.co/100x100?text=Sin+Foto';
-
+      products.forEach((product) => {
+        const imageUrl = product.image ? `${backendUrl}/storage/products/${product.image}` : 'https://placehold.co/100x100?text=Sin+Foto';
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-tpv-bg/40 transition-all duration-200 border-b border-tpv-border/50 last:border-0 group";
+        tr.className = "hover:bg-tpv-bg/40 transition-all border-b border-tpv-border/50";
         tr.innerHTML = `
-          <td class="p-4">
-            <img src="${imageUrl}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover border border-tpv-border group-hover:scale-105 transition-transform">
-          </td>
+          <td class="p-4"><img src="${imageUrl}" class="w-12 h-12 rounded-lg object-cover"></td>
           <td class="p-4 font-bold text-tpv-text">${product.name}</td>
-          <td class="p-4">
-            <span class="bg-tpv-bg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-tpv-border text-tpv-text-muted">
-              ${product.category.name}
-            </span>
-          </td>
-          <td class="p-4 font-mono font-black text-tpv-accent text-lg">${parseFloat(String(product.price)).toFixed(2)}€</td>
+          <td class="p-4 text-xs uppercase font-black text-tpv-text-muted">${product.category.name}</td>
+          <td class="p-4 font-mono font-black text-tpv-accent">${Number(product.price).toFixed(2)}€</td>
           <td class="p-4 text-right space-x-2">
-            <button class="text-tpv-accent hover:text-tpv-text font-bold text-xs uppercase px-3 py-1.5 bg-tpv-accent/10 rounded-lg transition-all border border-tpv-accent/20">Editar</button>
-            <button class="text-red-400 hover:text-white font-bold text-xs uppercase px-3 py-1.5 bg-red-500/10 rounded-lg transition-all border border-red-500/20">Borrar</button>
-          </td>
-        `;
+            <button class="edit-btn text-tpv-accent hover:bg-tpv-accent/10 px-3 py-1.5 rounded-lg" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-category="${product.category_id}">Editar</button>
+            <button class="delete-btn text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-lg" data-id="${product.id}">Borrar</button>
+          </td>`;
         tbody.appendChild(tr);
       });
-    } catch (error) {
-      tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold uppercase tracking-tighter">⚠️ Error de conexión con el servidor</td></tr>`;
-    }
+      attachEventListeners();
+    } catch (e) { console.error(e); }
   }
 
-  loadAdminProducts();
+  function attachEventListeners() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+        if (!id || !confirm('¿Eliminar producto?')) return;
+        const token = localStorage.getItem('auth_token');
+        await fetch(`${backendUrl}/api/products/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+        loadAdminProducts();
+      });
+    });
 
-  // --- LÓGICA DEL MODAL ---
-  const modal = document.getElementById('product-modal');
-  const openBtn = document.getElementById('open-modal-btn');
-  const closeBtn = document.getElementById('close-modal-btn');
-  const backdrop = document.getElementById('modal-backdrop');
-  const form = document.getElementById('add-product-form') as HTMLFormElement;
-  const submitBtn = document.getElementById('submit-product-btn') as HTMLButtonElement;
-  const btnText = document.getElementById('btn-text-product');
-
-  function toggleModal(show: boolean) {
-    if (show) modal?.classList.remove('hidden');
-    else {
-      modal?.classList.add('hidden');
-      form?.reset();
-    }
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const t = e.currentTarget as HTMLElement;
+        if (!form) return;
+        isEditing = true;
+        currentProductId = t.getAttribute('data-id');
+        toggleModal(true, true);
+        if (modalTitle) modalTitle.textContent = "Editar Producto";
+        if (btnText) btnText.textContent = "Actualizar Cambios";
+        (form.elements.namedItem('name') as HTMLInputElement).value = t.getAttribute('data-name') || '';
+        (form.elements.namedItem('price') as HTMLInputElement).value = t.getAttribute('data-price') || '';
+        (form.elements.namedItem('category_id') as HTMLSelectElement).value = t.getAttribute('data-category') || '';
+      });
+    });
   }
 
-  openBtn?.addEventListener('click', () => toggleModal(true));
-  closeBtn?.addEventListener('click', () => toggleModal(false));
-  backdrop?.addEventListener('click', () => toggleModal(false));
-
-  // --- ENVÍO DEL FORMULARIO CON FEEDBACK (TOAST) ---
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (submitBtn && btnText) {
-      submitBtn.disabled = true;
-      btnText.textContent = 'Procesando...';
-    }
-
+    if (!form) return;
     const formData = new FormData(form);
     const token = localStorage.getItem('auth_token');
-
-    try {
-      const response = await fetch(`${backendUrl}/api/products`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Error al guardar');
-
-      toggleModal(false);
-      loadAdminProducts(); 
-      
-      // ✅ LANZAMOS EL TOAST (Asegúrate de tenerlo en AdminLayout)
-      if (window.showToast) {
-        window.showToast('¡Producto añadido con éxito!');
-      }
-
-    } catch (error: any) {
-      if (window.showToast) window.showToast('No se pudo guardar el plato', 'error');
-    } finally {
-      if (submitBtn && btnText) {
-        submitBtn.disabled = false;
-        btnText.textContent = 'Guardar Producto';
-      }
+    if (isEditing) {
+      formData.append('_method', 'PUT');
+      if (!(form.elements.namedItem('image') as HTMLInputElement).files?.[0]) formData.delete('image');
     }
+    const url = isEditing ? `${backendUrl}/api/products/${currentProductId}` : `${backendUrl}/api/products`;
+    const res = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }, body: formData });
+    if (res.ok) { toggleModal(false); loadAdminProducts(); }
   });
+
+  loadAdminProducts();
 </script>

@@ -5,22 +5,18 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TableController;
 use Illuminate\Support\Facades\Route;
 
-// Catálogo público
-Route::get('/products', [ProductController::class, 'index']);
+// --- PRODUCTOS ---
+Route::apiResource('products', ProductController::class);
 
-// Mesas — mapa de estado para el frontend
-Route::get('/tables', [TableController::class, 'index']);
-// Añade esta línea para permitir la creación de mesas
-Route::post('/tables', [TableController::class, 'store']);
-
-// Generador de la imagen SVG
+// --- MESAS ---
+Route::apiResource('tables', TableController::class);
 Route::get('/tables/{id}/qr', [TableController::class, 'generateQr']);
 
-// Pedidos — público (el camarero envía desde la tablet sin login)
+// --- PEDIDOS ---
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
 
-// Autenticación de camareros
+// --- AUTENTICACIÓN ---
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {

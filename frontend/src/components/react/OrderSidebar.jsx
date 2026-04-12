@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '@nanostores/react';
-// IMPORTANTE: Hemos añadido selectedTable aquí abajo
 import { cartItems, updateQuantity, addNoteToItem, clearCart, selectedTable } from '../../store/cartStore.js';
-// IMPORTANTE: Descomenta la línea de abajo cuando crees el archivo printer.js del paso anterior
 // import { printKitchenTicket } from '../../utils/printer.js';
 
 export default function OrderSidebar() {
@@ -13,7 +11,7 @@ export default function OrderSidebar() {
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handleSendOrder = async () => {
-    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
     const token = localStorage.getItem('auth_token');
 
     if (!token) {
