@@ -3,11 +3,18 @@ interface Props {
   title: string;
 }
 
-import '../styles/global.css';
+import "../styles/global.css";
 const { title } = Astro.props;
 
-// 1. Leemos la ruta actual en la que estamos navegando
 const currentPath = Astro.url.pathname;
+
+// Función para comprobar si una ruta está activa
+const isActive = (path: string) => {
+  if (path === "/admin") {
+    return currentPath === "/admin" || currentPath === "/admin/";
+  }
+  return currentPath.startsWith(path);
+};
 ---
 
 <!doctype html>
@@ -16,18 +23,14 @@ const currentPath = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | Panel de Administración</title>
-    
+
     <script is:inline>
-      const token = localStorage.getItem('auth_token');
-      const userStr = localStorage.getItem('user_data');
-      
-      if (!token || !userStr) {
-        window.location.replace('/login');
-      } else {
-        const user = JSON.parse(userStr);
-        if (user.role !== 'admin') {
-          window.location.replace('/'); 
-        }
+      // BLOQUE DE SEGURIDAD: Si no hay token o no es admin, fuera.
+      const token = localStorage.getItem("auth_token");
+      const role = localStorage.getItem("user_role");
+
+      if (!token || role !== "admin") {
+        window.location.replace("/");
       }
     </script>
   </head>
@@ -40,38 +43,67 @@ const currentPath = Astro.url.pathname;
         <h2 class="text-2xl font-black text-transparent bg-clip-text bg-linear-to-r from-tpv-accent to-blue-400">
           CookFlow
         </h2>
-        <p class="text-xs text-tpv-text-muted font-bold tracking-widest uppercase mt-1">Backoffice</p>
+        <p class="text-xs text-tpv-text-muted font-bold tracking-widest uppercase mt-1">
+          Backoffice
+        </p>
       </div>
 
       <nav class="flex-1 p-4 space-y-2">
-        <a 
-          href="/admin" 
-          class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-            currentPath === '/admin' || currentPath === '/admin/'
-              ? 'bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
-              : 'text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text'
+        <a href="/admin" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin") && !currentPath.includes("/admin/") // Solo si es exacto /admin
+            || currentPath === "/admin"
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
           }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span class="font-bold text-sm">Panel</span>
+        </a>
+
+        <a href="/admin/productos" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/productos")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
           <span class="font-bold text-sm">Productos</span>
         </a>
-        
-        <a 
-          href="/admin/mesas" 
-          class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-            currentPath === '/admin/mesas' || currentPath === '/admin/mesas/'
-              ? 'bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
-              : 'text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text'
+
+        <a href="/admin/mesas" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/mesas")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
           }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
           <span class="font-bold text-sm">Mesas</span>
+        </a>
+
+        <a href="/admin/empleados" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/empleados")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span class="font-bold text-sm">Empleados</span>
         </a>
       </nav>
 
       <div class="p-4 border-t border-tpv-border">
         <button id="logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold text-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
           Cerrar Sesión
         </button>
       </div>
@@ -82,26 +114,22 @@ const currentPath = Astro.url.pathname;
     </main>
 
     <script is:inline>
-      window.showToast = (message, type = 'success') => {
-        const container = document.getElementById('toast-container');
+      // Función global para mostrar notificaciones
+      window.showToast = (message, type = "success") => {
+        const container = document.getElementById("toast-container");
         if (!container) return;
-
-        const toast = document.createElement('div');
+        const toast = document.createElement("div");
+        const bgColor = type === "success" ? "bg-tpv-accent" : "bg-red-500";
+        const icon = type === "success" ? "✅" : "❌";
         
-        const bgColor = type === 'success' ? 'bg-tpv-accent' : 'bg-red-500';
-        const icon = type === 'success' ? '✅' : '❌';
-
         toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10 font-bold transition-all duration-300 transform translate-y-4 opacity-0`;
         toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
         
         container.appendChild(toast);
-
+        setTimeout(() => toast.classList.remove("translate-y-4", "opacity-0"), 10);
+        
         setTimeout(() => {
-          toast.classList.remove('translate-y-4', 'opacity-0');
-        }, 10);
-
-        setTimeout(() => {
-          toast.classList.add('opacity-0', 'translate-y-2');
+          toast.classList.add("opacity-0", "translate-y-2");
           setTimeout(() => toast.remove(), 300);
         }, 3000);
       };
@@ -109,24 +137,27 @@ const currentPath = Astro.url.pathname;
 
     <script>
       const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      
-      document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        const token = localStorage.getItem('auth_token');
+
+      document.getElementById("logout-btn")?.addEventListener("click", async () => {
+        const token = localStorage.getItem("auth_token");
+        
         if (token) {
           try {
             await fetch(`${backendUrl}/api/logout`, {
-              method: 'POST',
+              method: "POST",
               headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-              }
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
             });
-          } catch (e) { console.error("Error al hacer logout", e); }
+          } catch (e) {
+            console.error("Error al hacer logout", e);
+          }
         }
-        
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
-        window.location.href = '/login';
+
+        // LIMPIEZA TOTAL
+        localStorage.clear();
+        window.location.href = "/";
       });
     </script>
   </body>

@@ -16,9 +16,9 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@cookflow.com'],
             [
-                'name' => 'Admin CookFlow',
+                'name' => 'Admin',
                 'role' => 'admin',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('admin'),
                 'email_verified_at' => now(),
             ]
         );
@@ -26,9 +26,9 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'camarero@cookflow.com'],
             [
-                'name' => 'Camarero CookFlow',
+                'name' => 'Camarero',
                 'role' => 'waiter',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('camarero'),
                 'email_verified_at' => now(),
             ]
         );

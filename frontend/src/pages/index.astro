@@ -1,206 +1,89 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import DishCard from '../components/DishCard.astro';
-import NavSidebar from '../components/NavSidebar.astro';
-import OrderSidebar from '../components/react/OrderSidebar.jsx'; 
-import type { Product } from '../types/api'; 
-
-const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
-
-// 1. Petición al backend para productos
-const res = await fetch(`${backendUrl}/api/products`);
-const products: Product[] = await res.json();
-
-// 2. Categorías únicas
-const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
+import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="TPV - CookFlow">
-  <div class="flex h-screen overflow-hidden bg-tpv-bg relative font-sans">
-    
-    <aside class="hidden md:flex shrink-0 h-full border-r border-tpv-border bg-tpv-surface">
-      <NavSidebar />
-    </aside>
+<Layout title="Acceso - CookFlow">
+  <div class="min-h-screen bg-tpv-bg flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-10">
+        <h1 class="text-5xl font-black text-tpv-accent tracking-tighter mb-2 italic">CookFlow</h1>
+        <p class="text-tpv-text-muted font-bold uppercase tracking-[0.2em] text-xs">Acceso de Personal</p>
+      </div>
 
-    <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden w-full relative">
-      
-      <header class="shrink-0 p-4 md:p-6 border-b border-tpv-border bg-tpv-surface/80 backdrop-blur-md">
-        <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-          {categories.map((cat) => (
-            <button 
-              class={`category-btn px-6 py-2.5 rounded-xl border transition-all whitespace-nowrap font-bold text-sm
-                ${cat === 'Todos' 
-                  ? 'bg-tpv-accent border-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
-                  : 'bg-tpv-bg border-tpv-border text-tpv-text-muted hover:border-tpv-accent hover:text-tpv-accent'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <section class="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative bg-tpv-bg">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-32 lg:pb-10">
-          {products.map(p => <DishCard product={p} />)}
-        </div>
-      </section>
-
-      <div class="absolute bottom-0 left-0 w-full p-6 bg-linear-to-t from-tpv-bg via-tpv-bg/95 to-transparent lg:hidden z-50">
-        <button 
-          id="mobile-cart-btn"
-          class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black py-4 px-6 rounded-2xl shadow-2xl shadow-tpv-accent/40 flex justify-between items-center transition-all active:scale-95 border border-white/10"
-        >
-          <div class="flex items-center gap-3">
-            <span id="mobile-cart-count" class="bg-white/20 text-white text-sm py-1.5 px-3 rounded-lg font-mono font-bold">
-              0
-            </span>
-            <span class="tracking-widest uppercase text-sm">Ver Pedido</span>
+      <div class="bg-tpv-surface border border-tpv-border p-8 rounded-3xl shadow-2xl">
+        <form id="login-form" class="space-y-6">
+          <div>
+            <label class="block text-xs font-black text-tpv-text-muted uppercase tracking-widest mb-3">¿Quién eres?</label>
+            <select id="user-select" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-tpv-accent appearance-none cursor-pointer font-bold">
+              <option value="" disabled selected>Cargando personal...</option>
+            </select>
           </div>
-          
-          <span id="mobile-cart-total" class="font-mono text-xl font-black">
-            0.00€
-          </span>
-        </button>
-      </div>
-    </main>
 
-    <aside class="hidden lg:flex shrink-0 w-80 xl:w-96 border-l border-tpv-border h-full bg-tpv-bg z-40">
-      <OrderSidebar client:only="react" />
-    </aside>
+          <div>
+            <label class="block text-xs font-black text-tpv-text-muted uppercase tracking-widest mb-3">Contraseña</label>
+            <input type="password" id="password-input" required placeholder="••••" class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-tpv-accent transition-all text-center tracking-[0.5em]"/>
+          </div>
 
-  </div>
-
-  <div id="select-table-modal" class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-tpv-bg/90 backdrop-blur-md transition-opacity">
-    <div class="bg-tpv-surface w-full max-w-4xl rounded-3xl shadow-2xl p-8 border border-tpv-border animate-in fade-in zoom-in-95 duration-200">
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-black text-tpv-text mb-2">Selecciona una Mesa</h2>
-        <p class="text-tpv-text-muted font-bold uppercase tracking-widest text-sm">¿A qué mesa le vamos a tomar nota?</p>
-      </div>
-
-      <div id="modal-tables-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div class="col-span-full text-center p-10 animate-pulse text-tpv-accent font-bold tracking-widest uppercase">
-          Cargando mapa de sala...
-        </div>
+          <button type="submit" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black py-5 rounded-2xl shadow-lg transition-all active:scale-[0.98]">
+            Entrar al Sistema
+          </button>
+        </form>
       </div>
     </div>
   </div>
 </Layout>
 
 <script>
-  import { cartItems, selectedTable } from '../store/cartStore.js';
+  const select = document.getElementById("user-select") as HTMLSelectElement;
+  const passwordInput = document.getElementById("password-input") as HTMLInputElement;
 
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-
-  document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- LÓGICA DEL CARRITO (La que ya tenías) ---
-    const countEl = document.getElementById('mobile-cart-count');
-    const totalEl = document.getElementById('mobile-cart-total');
-
-    cartItems.subscribe((items: readonly any[]) => {
-      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-      const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-      if (countEl) countEl.textContent = totalItems.toString();
-      if (totalEl) totalEl.textContent = totalPrice.toFixed(2) + '€';
-
-      const btn = document.getElementById('mobile-cart-btn');
-      if (btn && totalItems > 0) {
-        btn.classList.add('scale-[1.02]');
-        setTimeout(() => btn.classList.remove('scale-[1.02]'), 150);
-      }
-    });
-
-    // --- LÓGICA DE FILTRADO (La que ya tenías) ---
-    const categoryButtons = document.querySelectorAll('.category-btn');
-    const dishCards = document.querySelectorAll('.dish-card'); 
-    
-    categoryButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const buttonText = button.textContent?.trim().toLowerCase();
-        const filterCategory = buttonText === 'todos' ? 'all' : buttonText;
-
-        dishCards.forEach(card => {
-          const cardCategory = (card.getAttribute('data-category') || '').trim().toLowerCase();
-          if (filterCategory === 'all' || cardCategory === filterCategory) {
-            card.classList.remove('hidden');
-            card.classList.add('flex'); 
-          } else {
-            card.classList.add('hidden');
-            card.classList.remove('flex'); 
-          }
-        });
-
-        categoryButtons.forEach(btn => {
-          btn.classList.remove('bg-tpv-accent', 'text-white', 'border-tpv-accent', 'shadow-lg');
-          btn.classList.add('bg-tpv-bg', 'text-tpv-text-muted', 'border-tpv-border');
-        });
-
-        button.classList.add('bg-tpv-accent', 'text-white', 'border-tpv-accent', 'shadow-lg');
-        button.classList.remove('bg-tpv-bg', 'text-tpv-text-muted', 'border-tpv-border');
-      });
-    });
-
-    // --- 🔥 NUEVO: LÓGICA DE SELECCIÓN DE MESAS ---
-    const tableStatusStyles: Record<string, string> = {
-      free: 'bg-green-500/10 border-green-500/50 text-green-400 hover:bg-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]',
-      occupied: 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
-      pending: 'bg-amber-500/10 border-amber-500/50 text-amber-400 hover:bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
-    };
-
-    const tableStatusText: Record<string, string> = {
-      free: 'Libre',
-      occupied: 'Ocupada',
-      pending: 'Esperando plato'
-    };
-
-    async function loadTableSelection() {
-      const container = document.getElementById('modal-tables-grid');
-      if (!container) return;
-
-      try {
-        const response = await fetch(`${backendUrl}/api/tables`);
-        const tables = await response.json();
-
-        container.innerHTML = tables.map((table: any) => {
-          const style = tableStatusStyles[table.status] || tableStatusStyles.free;
-          const text = tableStatusText[table.status] || 'Desconocido';
-          
-          return `
-            <button 
-              onclick="window.selectTable(${table.id}, ${table.number})"
-              class="flex flex-col items-center justify-center p-8 rounded-3xl border-2 transition-all active:scale-95 cursor-pointer ${style}"
-            >
-              <span class="text-4xl font-black mb-3 font-mono">Mesa ${table.number}</span>
-              <span class="text-[10px] uppercase font-black tracking-widest px-4 py-1.5 rounded-full border border-current opacity-90 bg-tpv-bg/50 backdrop-blur-sm">
-                ${text}
-              </span>
-            </button>
-          `;
-        }).join('');
-      } catch (error) {
-        container.innerHTML = `<p class="col-span-full text-center text-red-500 font-bold uppercase tracking-widest">Error al cargar las mesas.</p>`;
-      }
+  // 1. CARGAR LISTA (Usamos el Proxy /api)
+  async function loadUsers() {
+    try {
+      const res = await fetch("/api/users-list"); 
+      const users = await res.json();
+      select.innerHTML = '<option value="" disabled selected>Escoge tu nombre...</option>' +
+        users.map((u: any) => `<option value="${u.name}">${u.name}</option>`).join("");
+    } catch (e) {
+      select.innerHTML = '<option value="">Error al conectar con el servidor</option>';
     }
+  }
 
-    // Función global para seleccionar la mesa
-    (window as any).selectTable = (id: number, number: number) => {
-      // 1. Guardamos en el Store (para que React lo lea)
-      selectedTable.set({ id, number });
-      
-      // 2. Ocultamos el modal
-      const modal = document.getElementById('select-table-modal');
-      if (modal) {
-        modal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-        setTimeout(() => modal.classList.add('hidden'), 200); // Animación de salida
-      }
-      
-      if ((window as any).showToast) {
-        (window as any).showToast(`Mesa ${number} seleccionada 📝`);
-      }
-    };
+  // 2. LÓGICA DE LOGIN
+  document.getElementById("login-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = select.value;
+    const password = passwordInput.value;
+    const email = `${username.toLowerCase().replace(/\s+/g, "")}@cookflow.com`;
 
-    // Cargamos las mesas al iniciar la app
-    loadTableSelection();
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      console.log("Respuesta del servidor:", data); // 👈 ¡ESTO ES CLAVE!
+
+      if (response.ok) {
+        // Guardamos el token probando varios nombres por si acaso
+        const token = data.access_token || data.token || data.plainTextToken;
+        
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", data.user.role);
+        
+        console.log("Token guardado:", token);
+        console.log("Rol guardado:", data.user.role);
+
+        window.location.href = data.user.role === "admin" ? "/admin/empleados" : "/tpv";
+      } else {
+        alert(data.message || "Error en el login");
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+    }
   });
+
+  loadUsers();
 </script>

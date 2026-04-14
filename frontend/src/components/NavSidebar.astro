@@ -10,32 +10,48 @@
   </div>
 
   <div class="flex-1 w-full px-2 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
-    <button class="flex flex-col items-center gap-1 py-4 px-2 rounded-2xl bg-tpv-accent/10 text-tpv-accent border border-tpv-accent/20 group transition-all">
+    <a href="/admin" class="flex flex-col items-center gap-1 py-4 px-2 rounded-2xl bg-tpv-accent/10 text-tpv-accent border border-tpv-accent/20 group transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
       </svg>
       <span class="text-[10px] font-black uppercase tracking-tighter">Ventas</span>
-    </button>
+    </a>
   </div>
 
   <div class="shrink-0 mt-auto w-full px-2 flex flex-col gap-2 border-t border-tpv-border/30 pt-6">
     
-    <a 
-      href="/login" 
-      class="flex flex-col items-center justify-center py-4 px-2 text-tpv-text-muted hover:text-tpv-text hover:bg-tpv-surface rounded-2xl transition-all group"
-      title="Acceso Encargado"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-      <span class="text-[10px] font-black uppercase tracking-tighter">Login</span>
-    </a>
-
     <button class="flex flex-col items-center gap-1 py-4 px-2 w-full rounded-2xl text-tpv-text-muted hover:bg-tpv-surface hover:text-tpv-text transition-all group">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:rotate-45 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
       </svg>
       <span class="text-[10px] font-black uppercase tracking-tighter">Ajustes</span>
     </button>
+
+    <button 
+      id="logout-btn"
+      class="flex flex-col items-center justify-center py-4 px-2 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-2xl transition-all group"
+      title="Cerrar Sesión"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+      <span class="text-[10px] font-black uppercase tracking-tighter">Salir</span>
+    </button>
+
   </div>
 </nav>
+
+<script>
+  // Lógica de Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  
+  logoutBtn?.addEventListener('click', () => {
+    // Borramos los datos de sesión
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_name');
+    
+    // Redirigimos al login (página principal)
+    window.location.href = '/';
+  });
+</script>

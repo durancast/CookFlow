@@ -10,7 +10,7 @@ const { product } = Astro.props;
 const backendUrl = import.meta.env.PUBLIC_BACKEND_URL|| "http://127.0.0.1:8000";
 
 const imageUrl = product.image 
-  ? `${backendUrl}/storage/products/${product.image}` 
+  ? `/storage/products/${product.image}` 
   : 'https://placehold.co/600x400?text=Sin+Imagen';
 ---
 <article 
