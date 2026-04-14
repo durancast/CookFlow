@@ -76,7 +76,7 @@ import Layout from "../layouts/Layout.astro";
         console.log("Token guardado:", token);
         console.log("Rol guardado:", data.user.role);
 
-        window.location.href = data.user.role === "admin" ? "/admin/empleados" : "/tpv";
+        window.location.href = data.user.role === "admin" ? "/admin/empleados" : "/tpv/tpv";
       } else {
         alert(data.message || "Error en el login");
       }
