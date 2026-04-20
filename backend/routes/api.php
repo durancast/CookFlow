@@ -1,10 +1,14 @@
 <?php
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
+// --- MENÚ PÚBLICO (sin token) ---
+Route::get('/public/menu', [MenuController::class, 'index']);
 
 // --- PRODUCTOS ---
 Route::apiResource('products', ProductController::class);
