@@ -16,6 +16,7 @@ Route::apiResource('products', ProductController::class);
 // --- MESAS ---
 Route::apiResource('tables', TableController::class);
 Route::get('/tables/{id}/qr', [TableController::class, 'generateQr']);
+Route::patch('/tables/{table}/status', [TableController::class, 'updateStatus'])->middleware('auth:sanctum');
 
 // --- PEDIDOS ---
 Route::post('/orders', [OrderController::class, 'store']);

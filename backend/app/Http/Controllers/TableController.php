@@ -61,6 +61,17 @@ class TableController extends Controller
         return response()->json(['message' => 'Mesa eliminada'], 200);
     }
 
+    public function updateStatus(Request $request, Table $table): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:free,occupied,pending'],
+        ]);
+
+        $table->update(['status' => $validated['status']]);
+
+        return response()->json($table->fresh());
+    }
+
     public function generateQr($id)
     {
         $table = Table::findOrFail($id);
