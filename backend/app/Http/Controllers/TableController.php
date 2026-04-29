@@ -34,7 +34,6 @@ class TableController extends Controller
         return response()->json($table, 201);
     }
 
-    // 🟢 NUEVO MÉTODO: Actualizar mesa
     public function update(Request $request, Table $table): JsonResponse
     {
         $data = $request->validate([
@@ -52,7 +51,6 @@ class TableController extends Controller
         ]);
     }
 
-    // 🔴 AJUSTADO: Eliminar mesa
     public function destroy(Table $table): JsonResponse
     {
         $table->delete();
@@ -81,5 +79,60 @@ class TableController extends Controller
         $qrCode = QrCode::size(300)->margin(1)->generate($url);
 
         return response($qrCode)->header('Content-Type', 'image/svg+xml');
+    }
+
+    // 🔥 NUEVO: Obtener la comanda activa de la mesa para el TPV
+    public function getActiveOrder(Table $table): JsonResponse
+    {
+        // 1. Usamos la excelente relación activeOrder() que ya tienes en tu modelo Table
+        // y le pedimos que nos traiga también los 'items' y el 'product' de cada item.
+        $order = $table->activeOrder()->with('items.product')->first();
+
+        if (!$order || $order->items->isEmpty()) {
+            return response()->json(['items' => []]);
+        }
+
+        // 2. Mapeamos los items usando tu estructura real ($orderItem->product)
+        $cartItems = $order->items->map(function ($orderItem) {
+            return [
+                // Es vital pasar el ID del producto, NO el ID del order_item
+                'id'       => $orderItem->product->id, 
+                'name'     => $orderItem->product->name,
+                'price'    => (float) $orderItem->unit_price, 
+                'quantity' => $orderItem->quantity,
+                'note'     => $orderItem->notes ?? '', 
+            ];
+        });
+
+        return response()->json(['items' => $cartItems]);
+    }
+
+    // 💸 COBRAR Y LIBERAR MESA
+    public function checkout(Request $request, Table $table): JsonResponse
+    {
+        // Recibimos si es cash (efectivo) o card (tarjeta)
+        $validated = $request->validate([
+            'payment_method' => ['sometimes', 'in:cash,card']
+        ]);
+
+        $order = $table->activeOrder()->first();
+
+        if ($order) {
+            // Actualizamos la orden a pagada
+            $order->update([
+                'status' => 'paid'
+            ]);
+            
+            // 💡 NOTA: Si en el futuro añades una columna "payment_method" a tu tabla de orders,
+            // puedes guardarlo así:
+            // $order->update(['status' => 'paid', 'payment_method' => $validated['payment_method']]);
+        }
+
+        // Liberamos la mesa
+        $table->update(['status' => 'free']);
+
+        return response()->json([
+            'message' => 'Mesa cobrada y liberada correctamente'
+        ]);
     }
 }

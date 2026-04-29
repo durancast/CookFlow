@@ -64,3 +64,9 @@ export function removeFromCart(productId) {
     const currentItems = cartItems.get();
     cartItems.set(currentItems.filter(item => (item.id || item.name) !== productId));
 }
+
+// 🚀 NUEVO: Limpiar carrito Y salir de la mesa actual
+export function clearOrder() {
+    cartItems.set([]);
+    selectedTable.set(null);
+}
