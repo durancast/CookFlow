@@ -1,5 +1,93 @@
 # Changelog
 
+## [BACK-502] Mesa pasa a free automáticamente al pagar
+
+**Fecha:** 2026-04-25
+
+### Cambio
+
+Cuando `PATCH /api/orders/{id}/status` recibe `{ "status": "paid" }`, el controlador ahora actualiza la mesa asociada a `free` de forma automática.
+
+```php
+if ($validated['status'] === 'paid') {
+    Table::where('id', $order->table_id)->update(['status' => 'free']);
+}
+```
+
+No se usó Observer — la lógica es puntual y el controlador es el lugar más directo para el alcance del TFG.
+
+### Archivos modificados
+
+- `app/Http/Controllers/OrderController.php` — import `Table` + bloque `if paid` en `updateStatus()`
+
+---
+
+## [BACK-503] CORS de producción + optimización
+
+**Fecha:** 2026-04-25
+
+### Cambios
+
+**CORS restrictivo por entorno**
+
+`config/cors.php` ya no tiene la URL del frontend hardcodeada. Ahora lee la variable de entorno `FRONTEND_URL`, con fallback a `http://localhost:4321` para desarrollo local.
+
+```php
+'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:4321')],
+```
+
+En producción solo hay que añadir al `.env` del backend:
+
+```
+FRONTEND_URL=https://<dominio-de-alejandro>.vercel.app
+```
+
+**`php artisan optimize`**
+
+Caché generada para config, eventos, rutas y vistas lista para despliegue.
+
+### Archivos modificados
+
+- `config/cors.php` — `allowed_origins` lee `FRONTEND_URL` del entorno
+- `.env` — añadida `FRONTEND_URL=http://localhost:4321`
+- `.env.example` — añadida `FRONTEND_URL=http://localhost:4321`
+
+---
+
+## [BACK-501] Endpoint de estadísticas del dashboard
+
+**Fecha:** 2026-04-25
+
+### GET /api/dashboard/stats
+
+Nuevo endpoint protegido con Sanctum. Devuelve tres métricas en tiempo real para el panel de administración.
+
+**Auth:** Bearer token (Sanctum)
+
+**Response 200:**
+```json
+{
+  "revenue_today": 39.9,
+  "top_product": { "id": 6, "name": "Cerveza", "total_quantity": "4" },
+  "occupied_tables": 1
+}
+```
+
+| Campo | Descripción |
+|-------|-------------|
+| `revenue_today` | Suma de `total_price` de comandas con `status = paid` creadas hoy |
+| `top_product` | Producto con mayor `SUM(quantity)` en `order_items` (histórico) |
+| `occupied_tables` | Conteo de mesas con `status = occupied` en tiempo real |
+
+### Archivos modificados
+
+- `database/migrations/2026_04_25_155013_add_created_at_to_orders_table.php` — añade `created_at` a `orders` con `DEFAULT CURRENT_TIMESTAMP`
+- `app/Http/Controllers/DashboardController.php` — **creado**
+- `routes/api.php` — ruta registrada dentro del grupo `auth:sanctum`
+- `bootstrap/app.php` — `shouldRenderJsonWhen` para que rutas `/api/*` devuelvan 401 JSON en lugar de redirigir al login web
+
+---
+
 ## Bugfixes — Status endpoint y frontend env
 
 **Fecha:** 2026-04-25

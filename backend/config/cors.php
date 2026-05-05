@@ -8,9 +8,7 @@ return [
 
     'allowed_methods' => ['*'], // Permite GET, POST, PUT, DELETE, etc.
 
-    // 🚩 AQUÍ ESTÁ LA CLAVE: 
-    // Debes poner la URL exacta de tu frontend de Astro
-    'allowed_origins' => ['http://localhost:4321'], 
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:4321')],
 
     'allowed_origins_patterns' => [],
 
