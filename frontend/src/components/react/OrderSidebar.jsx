@@ -20,9 +20,8 @@ export default function OrderSidebar() {
   // --- 🏷️ CAMBIAR ESTADO MANUAL ---
   const handleStatusChange = async (newStatus) => {
     if (!currentTable) return;
-    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
     try {
-      await fetch(`${backendUrl}/api/tables/${currentTable.id}/status`, {
+      await fetch(`/api/tables/${currentTable.id}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -43,9 +42,8 @@ export default function OrderSidebar() {
     if (!currentTable) return;
     
     if (items.length === 0) {
-      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
       try {
-        await fetch(`${backendUrl}/api/tables/${currentTable.id}/status`, {
+        await fetch(`/api/tables/${currentTable.id}/status`, {
           method: 'PATCH',
           headers: { 
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 
@@ -65,7 +63,6 @@ export default function OrderSidebar() {
 
   // --- 📝 ENVIAR COMANDA A COCINA ---
   const handleSendOrder = async () => {
-    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
     const token = localStorage.getItem('auth_token');
 
     if (!token) {
@@ -95,7 +92,7 @@ export default function OrderSidebar() {
     };
 
     try {
-      const response = await fetch(`${backendUrl}/api/orders`, {
+      const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -136,13 +133,12 @@ export default function OrderSidebar() {
     printCustomerReceipt(items, currentTable.number, total);
 
     // 2. Avisa a Laravel de que la mesa está pendiente de cobro
-    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
     try {
-      await fetch(`${backendUrl}/api/tables/${currentTable.id}/status`, {
+      await fetch(`/api/tables/${currentTable.id}/status`, {
         method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 
-          'Content-Type': 'application/json' 
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ status: 'pending' }) // 👈 ESTADO AMARILLO
       });
@@ -160,11 +156,10 @@ export default function OrderSidebar() {
     // Si es con tarjeta, pide confirmación simple. Si es efectivo, ya se confirmó en la calculadora.
     if (method === 'card' && !window.confirm(`¿Seguro que deseas cobrar ${total.toFixed(2)}€ con Tarjeta?`)) return;
 
-    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
     const token = localStorage.getItem('auth_token');
 
     try {
-      const response = await fetch(`${backendUrl}/api/tables/${currentTable.id}/checkout`, {
+      const response = await fetch(`/api/tables/${currentTable.id}/checkout`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`, 

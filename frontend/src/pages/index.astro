@@ -64,24 +64,29 @@ import Layout from "../layouts/Layout.astro";
       });
 
       const data = await response.json();
-      console.log("Respuesta del servidor:", data); // 👈 ¡ESTO ES CLAVE!
 
       if (response.ok) {
-        // Guardamos el token probando varios nombres por si acaso
         const token = data.access_token || data.token || data.plainTextToken;
-        
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_role", data.user.role);
-        
-        console.log("Token guardado:", token);
-        console.log("Rol guardado:", data.user.role);
+        const role  = data.user.role as string;
 
-        window.location.href = data.user.role === "admin" ? "/admin/empleados" : "/tpv";
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", role);
+
+        document.cookie = `auth_token=${token}; path=/; SameSite=Strict; Max-Age=86400`;
+        document.cookie = `user_role=${role}; path=/; SameSite=Strict; Max-Age=86400`;
+
+        const redirects: Record<string, string> = {
+          admin:   '/admin/empleados',
+          manager: '/admin/productos',
+          waiter:  '/tpv',
+          cook:    '/cocina',
+        };
+        window.location.href = redirects[role] ?? '/tpv';
       } else {
         alert(data.message || "Error en el login");
       }
     } catch (error) {
-      console.error("Error en la petición:", error);
+      alert("Error al conectar con el servidor");
     }
   });
 

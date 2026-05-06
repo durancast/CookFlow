@@ -1,5 +1,97 @@
 # Changelog
 
+## [SESSION-7] Bug Fixes — Kitchen 500, dashboard MySQL, storage symlink — 2026-05-06
+
+### Bugs fixed
+
+#### Kitchen display — PATCH /orders/{id}/status returned 500 (Route [login] not defined)
+- `auth:sanctum` middleware rejected unauthenticated requests by trying to call `route('login')`, which doesn't exist in this API-only backend → `RouteNotFoundException` → 500
+- Root cause 1: `bootstrap/app.php` had no `redirectGuestsTo` override, so Laravel's `Authenticate` middleware always tried to redirect to the `login` named route
+- Root cause 2: The kitchen display (`/cocina`) is an always-on screen with no login — it has no token by design
+- Fix 1: Added `$middleware->redirectGuestsTo(fn () => null)` in `bootstrap/app.php` — any protected API route now returns a clean 401 JSON instead of crashing
+- Fix 2: Removed `->middleware('auth:sanctum')` from `PATCH /api/orders/{order}/status` — kitchen is a trusted internal screen, no auth needed
+- Fix 3: Removed the `Authorization` header from `KitchenDisplay.jsx::updateStatus()` — no longer needed
+
+#### Dashboard stats — 500 on `GET /api/dashboard/stats`
+- `DashboardController::stats()` used `strftime("%H", created_at)` — SQLite syntax
+- DB had been migrated to MySQL (`cookflow` database, 127.0.0.1:3306) → `FUNCTION cookflow.strftime does not exist`
+- Fix: Replaced `strftime("%H", created_at)` with `HOUR(created_at)` in both `selectRaw` and `groupByRaw`
+
+#### Product images — 403 Forbidden on all `/storage/products/*.webp`
+- `public/storage` symlink did not exist — git does not track symlinks created by `php artisan storage:link`
+- Fix: Ran `php artisan storage:link` → `public/storage → storage/app/public` symlink created
+- Note: This must be re-run after every fresh clone or `migrate:fresh`
+
+### Files modified
+- `backend/bootstrap/app.php` — `redirectGuestsTo(fn () => null)` added
+- `backend/routes/api.php` — `auth:sanctum` removed from `PATCH /orders/{order}/status`
+- `backend/app/Http/Controllers/DashboardController.php` — `strftime` → `HOUR()` for MySQL
+- `frontend/src/components/react/KitchenDisplay.jsx` — `Authorization` header removed from `updateStatus`
+
+---
+
+## [SESSION-6] Bug Fixes — Multi-round orders, kitchen auth, route cache — 2026-05-06
+
+### Bugs fixed
+
+#### KitchenDisplay — "Listo ✓" silently did nothing
+- `PATCH /api/orders/{order}/status` is protected by `auth:sanctum`
+- `updateStatus()` in `KitchenDisplay.jsx` was sending the request with no `Authorization` header → 401 → order status never changed, card stayed on screen forever
+- Fix: Added `'Authorization': \`Bearer ${localStorage.getItem('auth_token')}\`` to the fetch headers
+
+#### Stale Laravel route cache — categories 404, orders 405
+- `php artisan optimize` had been run previously, generating a `CompiledRouteCollection`
+- Routes added after that (RBAC routes, categories, `active-order`) were invisible to the router
+- Symptom: `GET /api/categories` → `NotFoundHttpException` from `CompiledRouteCollection`; `GET /api/orders` → 405
+- Fix: `php artisan optimize:clear` — cleared routes, config, compiled, events, views caches
+
+#### `import.meta` SyntaxError on productos page
+- `<script define:vars={{ canEdit }}>` makes the block inline (non-ES module) — `import.meta` is unavailable
+- Line `const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || '...'` caused `Uncaught SyntaxError: Cannot use 'import.meta' outside a module`
+- The variable was also completely unused (all fetches use relative `/api/` paths)
+- Fix: Removed the line entirely from `admin/productos.astro`
+
+#### AdminMiddleware phantom alias
+- `bootstrap/app.php` had `'admin' => \App\Http\Middleware\AdminMiddleware::class`
+- The file `AdminMiddleware.php` does not exist — latent fatal if any route ever used `middleware('admin')`
+- No routes referenced it, but it was a ticking time bomb
+- Fix: Removed the `'admin'` alias; kept only `'role' => CheckRole::class`
+
+#### Cart shows only last round of orders on occupied table re-entry
+- `Table::activeOrder()` is a `HasOne` with `latestOfMany()` — always returns the single most recent non-paid order
+- `TableController::getActiveOrder()` fetched only that one order's items
+- Every new kitchen round creates a new `Order` record → returning to an occupied table showed only the last batch sent
+- Fix: `getActiveOrder()` now queries ALL non-paid orders for the table (`$table->orders()->where('status', '!=', 'paid')->get()`), flatMaps all their items, and merges by `(product_id . '|' . notes)` key — quantities are summed for identical items, different notes stay separate
+
+#### Checkout only marked last order as paid
+- `checkout()` was using `$table->activeOrder()->first()` → updated only the newest non-paid order to `paid`
+- Previous rounds remained with their original status — table was "freed" but orders were still non-paid in the DB
+- Fix: `$table->orders()->where('status', '!=', 'paid')->update(['status' => 'paid'])` — bulk-updates every round in a single query
+
+### RBAC applied
+- `CheckRole` middleware created at `backend/app/Http/Middleware/CheckRole.php`
+- Migration `2026_05_06_100001_change_role_to_string.php` — changes `role` column from integer to string enum (`admin`, `manager`, `waiter`, `cook`)
+- `bootstrap/app.php` — `role` alias registered
+- `frontend/src/middleware.ts` — Astro SSR middleware guards pages by cookie `user_role`
+- `frontend/src/pages/403.astro` — Forbidden page for unauthorized access
+- `frontend/src/pages/admin/empleados.astro` — Employee management page (admin-only)
+- `UserSeeder.php` — roles updated to string values
+
+### Files modified
+- `backend/bootstrap/app.php` — phantom `admin` alias removed, `role` alias confirmed
+- `backend/routes/api.php` — RBAC middleware applied to relevant route groups
+- `backend/database/seeders/UserSeeder.php` — string roles
+- `backend/app/Http/Controllers/TableController.php` — `getActiveOrder()` multi-round merge + `checkout()` bulk-paid fix
+- `backend/app/Http/Middleware/CheckRole.php` — **created**
+- `backend/database/migrations/2026_05_06_100001_change_role_to_string.php` — **created**
+- `frontend/src/components/react/KitchenDisplay.jsx` — auth header added to `updateStatus`
+- `frontend/src/pages/admin/productos.astro` — `import.meta` line removed
+- `frontend/src/middleware.ts` — **created**
+- `frontend/src/pages/403.astro` — **created**
+- `frontend/src/pages/admin/empleados.astro` — **created**
+
+---
+
 ## [PLAN-PHASE4] Kitchen Display & Public Menu — 2026-05-06
 
 ### Phase 4a — Kitchen display `/cocina`

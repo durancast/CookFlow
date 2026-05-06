@@ -1,0 +1,21 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Acceso Denegado - CookFlow">
+  <div class="min-h-screen bg-tpv-bg flex items-center justify-center p-4">
+    <div class="text-center max-w-md">
+      <div class="mb-8">
+        <span class="text-8xl font-black text-tpv-accent italic">403</span>
+      </div>
+      <h1 class="text-2xl font-black text-tpv-text uppercase tracking-widest mb-3">Acceso Denegado</h1>
+      <p class="text-tpv-text-muted font-bold mb-8">No tienes permiso para acceder a esta sección.</p>
+      <a
+        href="javascript:history.back()"
+        class="inline-block bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black px-8 py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98]"
+      >
+        Volver
+      </a>
+    </div>
+  </div>
+</Layout>

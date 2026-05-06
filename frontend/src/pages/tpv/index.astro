@@ -116,12 +116,7 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
 <script>
   import { cartItems, selectedTable, addToCart } from '../../store/cartStore.js';
 
-  // --- 🛡️ GUARDIÁN DE RUTAS ---
-  const token = localStorage.getItem('auth_token');
-  
-  if (!token) {
-    window.location.href = '/';
-  }
+  // Middleware handles server-side auth; localStorage token still used for API calls
 
   async function loadTableSelection() {
     const container = document.getElementById('modal-tables-grid');
@@ -178,6 +173,8 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
     document.getElementById('tpv-logout-btn')?.addEventListener('click', () => {
       if (confirm('¿Cerrar sesión y salir del TPV?')) {
         localStorage.clear();
+        document.cookie = 'auth_token=; path=/; Max-Age=0';
+        document.cookie = 'user_role=; path=/; Max-Age=0';
         window.location.href = '/';
       }
     });

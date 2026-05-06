@@ -2,29 +2,30 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
+
   vite: {
     //@ts-ignore
     plugins: [tailwindcss()],
-    
+
     server: {
       proxy: {
-        // Redirige las llamadas de API
-        '/api': { 
+        '/api': {
           target: 'http://127.0.0.1:8000',
-          changeOrigin: true 
+          changeOrigin: true
         },
-        // Redirige el acceso al storage (si usas el link simbólico)
-        '/storage': { 
+        '/storage': {
           target: 'http://127.0.0.1:8000',
-          changeOrigin: true 
+          changeOrigin: true
         },
-        // Redirige el acceso a la carpeta pública directa (el Plan B)
-        '/products': { 
+        '/products': {
           target: 'http://127.0.0.1:8000',
-          changeOrigin: true 
+          changeOrigin: true
         }
       }
     }

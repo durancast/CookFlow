@@ -1,6 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import KitchenDisplay from '../../components/react/KitchenDisplay.jsx';
+
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const readonly = role === 'waiter';
 ---
 
 <Layout title="Cocina — CookFlow">
@@ -32,7 +35,7 @@ import KitchenDisplay from '../../components/react/KitchenDisplay.jsx';
     </header>
 
     <main class="flex-1 overflow-hidden">
-      <KitchenDisplay client:only="react" />
+      <KitchenDisplay client:only="react" readonly={readonly} />
     </main>
 
   </div>

@@ -25,12 +25,22 @@ const isActive = (path: string) => {
     <title>{title} | Panel de Administración</title>
 
     <script is:inline>
-      // BLOQUE DE SEGURIDAD: Si no hay token o no es admin, fuera.
-      const token = localStorage.getItem("auth_token");
-      const role = localStorage.getItem("user_role");
+      // Fallback client-side guard — middleware is the primary enforcement
+      function _getCookie(name) {
+        const m = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]+)');
+        return m ? decodeURIComponent(m[1]) : null;
+      }
+      const token = localStorage.getItem("auth_token") || _getCookie("auth_token");
+      const role  = localStorage.getItem("user_role")  || _getCookie("user_role");
 
-      if (!token || role !== "admin") {
+      if (!token || !["admin", "manager"].includes(role)) {
         window.location.replace("/");
+      }
+
+      // Sync to localStorage so subsequent client fetches can read the token
+      if (token && !localStorage.getItem("auth_token")) {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", role);
       }
     </script>
   </head>
@@ -186,13 +196,12 @@ const isActive = (path: string) => {
                 Accept: "application/json",
               },
             });
-          } catch (e) {
-            console.error("Error al hacer logout", e);
-          }
+          } catch (e) {}
         }
 
-        // LIMPIEZA TOTAL
         localStorage.clear();
+        document.cookie = 'auth_token=; path=/; Max-Age=0';
+        document.cookie = 'user_role=; path=/; Max-Age=0';
         window.location.href = "/";
       });
     </script>

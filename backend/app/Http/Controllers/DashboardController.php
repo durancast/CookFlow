@@ -32,8 +32,8 @@ class DashboardController extends Controller
 
         $ordersByHour = Order::where('status', 'paid')
             ->whereDate('created_at', today())
-            ->selectRaw('strftime("%H", created_at) as hour, COUNT(*) as count')
-            ->groupByRaw('strftime("%H", created_at)')
+            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count')
+            ->groupByRaw('HOUR(created_at)')
             ->orderBy('hour')
             ->get()
             ->map(fn($row) => ['hour' => (int) $row->hour, 'count' => (int) $row->count]);

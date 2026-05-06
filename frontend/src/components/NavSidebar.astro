@@ -109,9 +109,9 @@
   selectedTable.subscribe(() => renderNavTables());
 
   document.getElementById('logout-btn')?.addEventListener('click', () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('user_name');
+    localStorage.clear();
+    document.cookie = 'auth_token=; path=/; Max-Age=0';
+    document.cookie = 'user_role=; path=/; Max-Age=0';
     window.location.href = '/';
   });
 

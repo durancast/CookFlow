@@ -52,5 +52,25 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'manager@cookflow.com'],
+            [
+                'name' => 'Manager',
+                'role' => 'manager',
+                'password' => Hash::make('manager'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'cocinero@cookflow.com'],
+            [
+                'name' => 'Cocinero',
+                'role' => 'cook',
+                'password' => Hash::make('cocinero'),
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }

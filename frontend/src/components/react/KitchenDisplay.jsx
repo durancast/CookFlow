@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
-
 function ElapsedTimer({ createdAt }) {
   const getElapsed = () => Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
   const [elapsed, setElapsed] = useState(getElapsed);
@@ -26,14 +24,14 @@ function ElapsedTimer({ createdAt }) {
   );
 }
 
-export default function KitchenDisplay() {
+export default function KitchenDisplay({ readonly = false }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/orders?status=pending,preparing`);
+      const res = await fetch('/api/orders?status=pending,preparing');
       if (res.ok) {
         setOrders(await res.json());
         setLastUpdated(new Date());
@@ -51,7 +49,7 @@ export default function KitchenDisplay() {
 
   const updateStatus = async (orderId, newStatus) => {
     try {
-      await fetch(`${BACKEND_URL}/api/orders/${orderId}/status`, {
+      await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -134,24 +132,32 @@ export default function KitchenDisplay() {
                 ))}
               </ul>
 
-              <div className="flex gap-2 pt-1">
-                {!isPreparing && (
-                  <button
-                    onClick={() => updateStatus(order.id, 'preparing')}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-500/20"
-                  >
-                    Preparando
-                  </button>
-                )}
-                {isPreparing && (
-                  <button
-                    onClick={() => updateStatus(order.id, 'served')}
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-green-500/20"
-                  >
-                    Listo ✓
-                  </button>
-                )}
-              </div>
+              {readonly ? (
+                <div className="pt-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-tpv-bg text-tpv-text-muted border border-tpv-border">
+                    Vista de sala
+                  </span>
+                </div>
+              ) : (
+                <div className="flex gap-2 pt-1">
+                  {!isPreparing && (
+                    <button
+                      onClick={() => updateStatus(order.id, 'preparing')}
+                      className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-500/20"
+                    >
+                      Preparando
+                    </button>
+                  )}
+                  {isPreparing && (
+                    <button
+                      onClick={() => updateStatus(order.id, 'served')}
+                      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-green-500/20"
+                    >
+                      Listo ✓
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

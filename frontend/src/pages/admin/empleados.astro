@@ -22,6 +22,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <input type="text" name="name" required placeholder="Nombre Completo" class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
         <select name="role" required class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
           <option value="waiter">Camarero</option>
+          <option value="cook">Cocinero</option>
+          <option value="manager">Manager</option>
           <option value="admin">Administrador</option>
         </select>
         <input type="password" name="password" required placeholder="Contraseña" class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
@@ -39,110 +41,75 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   const modal = document.getElementById('employee-modal');
   const form = document.getElementById('employee-form') as HTMLFormElement;
 
-  // 🛡️ GUARDIÁN DE SEGURIDAD (Ejecución inmediata)
-  function isAuthorized() {
-    const token = localStorage.getItem('auth_token');
-    const role = localStorage.getItem('user_role');
-    
-    console.log("DEBUG EMPLEADOS:");
-    console.log("Token en memoria:", token);
-    console.log("Rol en memoria:", role);
-
-    if (!token || role !== 'admin') {
-      console.error("⛔ NO AUTORIZADO: Redirigiendo en 5 segundos...");
-      // window.location.replace('/'); // 👈 COMENTA ESTA LÍNEA UN MOMENTO
-      return false;
-    }
-    return true;
-  }
-
   async function loadEmployees() {
-    // Si no está autorizado, cortamos la función AQUÍ para que no haga el fetch
-    if (!isAuthorized()) return;
-
     const token = localStorage.getItem('auth_token');
+    const res = await fetch("/api/users", {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
 
-    try {
-      const res = await fetch("/api/users", {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json' 
-        }
-      });
-
-      if (res.status === 401) {
-        localStorage.clear();
-        window.location.replace('/');
-        return;
-      }
-      
-      const users = await res.json();
-      if (!grid) return;
-
-      grid.innerHTML = users.map((u: any) => `
-        <div class="bg-tpv-surface border border-tpv-border rounded-3xl p-6 relative group">
-          <div class="w-12 h-12 rounded-2xl bg-tpv-bg flex items-center justify-center text-tpv-accent mb-4 font-black">
-            ${u.name ? u.name.charAt(0) : '?'}
-          </div>
-          <h3 class="text-xl font-black">${u.name}</h3>
-          <p class="text-[10px] uppercase text-tpv-accent font-black">${u.role}</p>
-          <button onclick="deleteUser(${u.id})" class="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-            Borrar
-          </button>
-        </div>
-      `).join('');
-
-    } catch (e: any) {
-      // Ignoramos el error si es porque la petición se abortó al navegar
-      if (e.name !== 'AbortError') {
-        console.error("Error cargando empleados:", e);
-      }
+    if (res.status === 401) {
+      localStorage.clear();
+      window.location.replace('/');
+      return;
     }
+
+    const users = await res.json();
+    if (!grid) return;
+
+    grid.innerHTML = users.map((u: any) => `
+      <div class="bg-tpv-surface border border-tpv-border rounded-3xl p-6 relative group">
+        <div class="w-12 h-12 rounded-2xl bg-tpv-bg flex items-center justify-center text-tpv-accent mb-4 font-black">
+          ${u.name ? u.name.charAt(0) : '?'}
+        </div>
+        <h3 class="text-xl font-black">${u.name}</h3>
+        <p class="text-[10px] uppercase text-tpv-accent font-black">${u.role}</p>
+        <button onclick="deleteUser(${u.id})" class="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-all">
+          Borrar
+        </button>
+      </div>
+    `).join('');
   }
 
-  // Lógica de borrado (Global)
   (window as any).deleteUser = async (id: number) => {
     if (!confirm('¿Eliminar empleado?')) return;
     const token = localStorage.getItem('auth_token');
-    try {
-        await fetch(`/api/users/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-        });
-        loadEmployees();
-    } catch (e) { console.error(e); }
+    await fetch(`/api/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    loadEmployees();
   };
 
-  // Formulario
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const token = localStorage.getItem('auth_token');
+    const res = await fetch("/api/users", {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(Object.fromEntries(fd))
+    });
 
-    try {
-        const res = await fetch("/api/users", {
-          method: 'POST',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(Object.fromEntries(fd))
-        });
-
-        if (res.ok) { 
-          modal?.classList.add('hidden');
-          loadEmployees(); 
-        } else {
-          alert("Error al crear empleado");
-        }
-    } catch (e) { console.error(e); }
+    if (res.ok) {
+      modal?.classList.add('hidden');
+      loadEmployees();
+    } else {
+      window.showToast?.('Error al crear empleado', 'error');
+    }
   });
 
-  // Eventos Modal
-  document.getElementById('open-modal-btn')?.addEventListener('click', () => modal?.classList.remove('hidden'));
-  document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.add('hidden'));
+  document.getElementById('open-modal-btn')?.addEventListener('click', () => {
+    modal?.classList.remove('hidden');
+    modal!.style.display = 'flex';
+  });
+  document.getElementById('close-modal')?.addEventListener('click', () => {
+    modal?.classList.add('hidden');
+    modal!.style.display = 'none';
+  });
 
-  // Carga inicial
   loadEmployees();
 </script>

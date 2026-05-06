@@ -86,30 +86,35 @@ class TableController extends Controller
         return response($qrCode)->header('Content-Type', 'image/svg+xml');
     }
 
-    // 🔥 NUEVO: Obtener la comanda activa de la mesa para el TPV
     public function getActiveOrder(Table $table): JsonResponse
     {
-        // 1. Usamos la excelente relación activeOrder() que ya tienes en tu modelo Table
-        // y le pedimos que nos traiga también los 'items' y el 'product' de cada item.
-        $order = $table->activeOrder()->with('items.product')->first();
+        $orders = $table->orders()
+            ->where('status', '!=', 'paid')
+            ->with('items.product')
+            ->get();
 
-        if (!$order || $order->items->isEmpty()) {
+        if ($orders->isEmpty()) {
             return response()->json(['items' => []]);
         }
 
-        // 2. Mapeamos los items usando tu estructura real ($orderItem->product)
-        $cartItems = $order->items->map(function ($orderItem) {
-            return [
-                // Es vital pasar el ID del producto, NO el ID del order_item
-                'id'       => $orderItem->product->id, 
-                'name'     => $orderItem->product->name,
-                'price'    => (float) $orderItem->unit_price, 
-                'quantity' => $orderItem->quantity,
-                'note'     => $orderItem->notes ?? '', 
-            ];
-        });
+        // Merge items from all rounds: same product + same note → sum quantities
+        $merged = [];
+        foreach ($orders->flatMap(fn($o) => $o->items) as $item) {
+            $key = $item->product_id . '|' . ($item->notes ?? '');
+            if (isset($merged[$key])) {
+                $merged[$key]['quantity'] += $item->quantity;
+            } else {
+                $merged[$key] = [
+                    'id'       => $item->product->id,
+                    'name'     => $item->product->name,
+                    'price'    => (float) $item->unit_price,
+                    'quantity' => $item->quantity,
+                    'note'     => $item->notes ?? '',
+                ];
+            }
+        }
 
-        return response()->json(['items' => $cartItems]);
+        return response()->json(['items' => array_values($merged)]);
     }
 
     public function callWaiter(Table $table): JsonResponse
@@ -134,18 +139,8 @@ class TableController extends Controller
             'payment_method' => ['sometimes', 'in:cash,card']
         ]);
 
-        $order = $table->activeOrder()->first();
-
-        if ($order) {
-            // Actualizamos la orden a pagada
-            $order->update([
-                'status' => 'paid'
-            ]);
-            
-            // 💡 NOTA: Si en el futuro añades una columna "payment_method" a tu tabla de orders,
-            // puedes guardarlo así:
-            // $order->update(['status' => 'paid', 'payment_method' => $validated['payment_method']]);
-        }
+        // Mark ALL non-paid orders for this table as paid (multiple rounds)
+        $table->orders()->where('status', '!=', 'paid')->update(['status' => 'paid']);
 
         // Liberamos la mesa
         $table->update(['status' => 'free']);
