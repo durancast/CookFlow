@@ -1,0 +1,134 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Ventas">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-tpv-text tracking-tight">Informe de Ventas</h1>
+    <p class="text-tpv-text-muted mt-1">Consulta las ventas por día</p>
+  </header>
+
+  <div class="flex items-center gap-4 mb-8">
+    <input type="date" id="date-picker"
+      class="bg-tpv-surface border border-tpv-border text-tpv-text rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-tpv-accent font-mono">
+    <button id="export-excel-btn"
+      class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 disabled:opacity-40">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      </svg>
+      Excel
+    </button>
+    <button id="export-pdf-btn"
+      class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 disabled:opacity-40">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      PDF
+    </button>
+  </div>
+
+  <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-tpv-surface border border-tpv-border p-6 rounded-3xl">
+      <h3 class="text-tpv-text-muted text-xs font-bold uppercase tracking-wider">Ingresos</h3>
+      <p id="stat-revenue" class="text-3xl font-black text-tpv-text font-mono mt-1">—</p>
+    </div>
+    <div class="bg-tpv-surface border border-tpv-border p-6 rounded-3xl">
+      <h3 class="text-tpv-text-muted text-xs font-bold uppercase tracking-wider">Pedidos</h3>
+      <p id="stat-orders" class="text-3xl font-black text-tpv-text font-mono mt-1">—</p>
+    </div>
+    <div class="bg-tpv-surface border border-tpv-border p-6 rounded-3xl">
+      <h3 class="text-tpv-text-muted text-xs font-bold uppercase tracking-wider">Ticket medio</h3>
+      <p id="stat-avg" class="text-3xl font-black text-tpv-text font-mono mt-1">—</p>
+    </div>
+  </div>
+
+  <div class="bg-tpv-surface border border-tpv-border rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-tpv-bg/50 border-b border-tpv-border">
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Producto</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-center">Unidades</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody id="products-tbody" class="divide-y divide-tpv-border">
+        <tr><td colspan="3" class="p-8 text-center text-tpv-text-muted">Selecciona una fecha</td></tr>
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<script>
+  import * as XLSX from 'xlsx';
+  import jsPDF from 'jspdf';
+  import autoTable from 'jspdf-autotable';
+
+  const token = () => localStorage.getItem('auth_token');
+  const datePicker = document.getElementById('date-picker') as HTMLInputElement;
+  const tbody = document.getElementById('products-tbody') as HTMLElement;
+
+  let reportData: any = null;
+
+  datePicker.value = new Date().toISOString().slice(0, 10);
+
+  async function loadReport(date: string) {
+    const res = await fetch(`/api/reports/daily?date=${date}`, {
+      headers: { Authorization: `Bearer ${token()}`, Accept: 'application/json' },
+    });
+    reportData = await res.json();
+
+    document.getElementById('stat-revenue')!.textContent = reportData.revenue.toFixed(2) + '€';
+    document.getElementById('stat-orders')!.textContent = String(reportData.order_count);
+    document.getElementById('stat-avg')!.textContent = reportData.avg_ticket.toFixed(2) + '€';
+
+    tbody.innerHTML = reportData.products.length
+      ? reportData.products.map((p: any) => `
+          <tr class="hover:bg-tpv-bg/40 transition-all">
+            <td class="p-4 font-bold text-tpv-text">${p.name}</td>
+            <td class="p-4 text-center font-mono text-tpv-text-muted">${p.quantity}</td>
+            <td class="p-4 text-right font-mono font-black text-tpv-accent">${Number(p.total).toFixed(2)}€</td>
+          </tr>`).join('')
+      : '<tr><td colspan="3" class="p-8 text-center text-tpv-text-muted">Sin ventas este día</td></tr>';
+  }
+
+  document.getElementById('export-excel-btn')?.addEventListener('click', () => {
+    if (!reportData) return;
+    const rows = reportData.products.map((p: any) => ({
+      Producto: p.name,
+      Unidades: p.quantity,
+      'Total (€)': Number(p.total).toFixed(2),
+    }));
+    rows.push({ Producto: 'TOTAL', Unidades: '', 'Total (€)': reportData.revenue.toFixed(2) });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+    XLSX.writeFile(wb, `ventas_${reportData.date}.xlsx`);
+  });
+
+  document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
+    if (!reportData) return;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text(`Informe de Ventas — ${reportData.date}`, 14, 20);
+    doc.setFontSize(11);
+    doc.text(`Ingresos: ${reportData.revenue.toFixed(2)}€   Pedidos: ${reportData.order_count}   Ticket medio: ${reportData.avg_ticket.toFixed(2)}€`, 14, 30);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['Producto', 'Unidades', 'Total (€)']],
+      body: [
+        ...reportData.products.map((p: any) => [p.name, p.quantity, Number(p.total).toFixed(2)]),
+        [{ content: 'TOTAL', styles: { fontStyle: 'bold' } }, '', { content: reportData.revenue.toFixed(2), styles: { fontStyle: 'bold' } }],
+      ],
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+
+    doc.save(`ventas_${reportData.date}.pdf`);
+  });
+
+  datePicker.addEventListener('change', () => loadReport(datePicker.value));
+  loadReport(datePicker.value);
+</script>

@@ -12,7 +12,9 @@ class Table extends Model
 
     protected $table = 'tables';
 
-    protected $fillable = ['number', 'capacity', 'status'];
+    protected $fillable = ['number', 'capacity', 'status', 'call_waiter'];
+
+    protected $casts = ['call_waiter' => 'boolean'];
 
     public function orders(): HasMany
     {

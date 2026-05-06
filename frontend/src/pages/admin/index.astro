@@ -96,10 +96,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       </div>
     </div>
   </div>
-</Layout>
+</AdminLayout>
 
 <script>
-  // 🛡️ GUARDIÁN
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+
   function checkAuth() {
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
@@ -124,9 +125,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const users = await resUsers.json();
       document.getElementById('stat-employees')!.textContent = users.length;
 
-      // Otros stats (aquí podrías llamar a un endpoint de ventas si lo tienes)
-      document.getElementById('stat-sales')!.textContent = "432.50€";
-      document.getElementById('stat-orders')!.textContent = "24";
+      const token = localStorage.getItem('auth_token');
+      const resStats = await fetch(`${backendUrl}/api/dashboard/stats`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      const stats = await resStats.json();
+      document.getElementById('stat-sales')!.textContent = stats.revenue_today.toFixed(2) + '€';
+      document.getElementById('stat-orders')!.textContent = String(stats.orders_today);
 
     } catch (e) { console.error(e); }
   }

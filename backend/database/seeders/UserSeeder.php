@@ -32,5 +32,25 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'nizarad@cookflow.com'],
+            [
+                'name' => 'NizarAd',
+                'role' => 'admin',
+                'password' => Hash::make('admin'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'nizarcam@cookflow.com'],
+            [
+                'name' => 'NizarCam',
+                'role' => 'waiter',
+                'password' => Hash::make('NizarCam'),
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }

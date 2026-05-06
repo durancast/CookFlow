@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@nanostores/react';
-import { cartItems, updateQuantity, addNoteToItem, clearCart, selectedTable, clearOrder } from '../../store/cartStore.js';
+import { cartItems, updateQuantity, addNoteToItem, clearCart, selectedTable, clearOrder, markItemsAsSent } from '../../store/cartStore.js';
 import { printKitchenTicket, printCustomerReceipt } from '../../utils/printer.js';
 
 export default function OrderSidebar() {
@@ -13,6 +13,8 @@ export default function OrderSidebar() {
   const [cashMode, setCashMode] = useState(false); // 👈 Activa la vista de calculadora
   const [amountGiven, setAmountGiven] = useState(''); // 👈 Guarda el billete entregado
   
+  const unsentItems = items.filter(i => !i.sent);
+  const hasUnsent = unsentItems.length > 0;
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   // --- 🚪 SALIR DE LA MESA ---
@@ -55,14 +57,19 @@ export default function OrderSidebar() {
       return;
     }
 
+    if (unsentItems.length === 0) {
+      if (window.showToast) window.showToast('No hay platos nuevos que enviar', 'error');
+      return;
+    }
+
     setIsSending(true);
 
     const orderData = {
       table_id: currentTable.id,
-      items: items.map(item => ({
+      items: unsentItems.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
-        notes: item.note || '' 
+        notes: item.note || ''
       }))
     };
 
@@ -79,8 +86,8 @@ export default function OrderSidebar() {
 
       if (response.ok || response.status === 201) {
         if (window.showToast) window.showToast('¡Comanda enviada a cocina! 👨‍🍳');
-        printKitchenTicket(items, currentTable.number);
-        clearOrder(); 
+        printKitchenTicket(unsentItems, currentTable.number);
+        markItemsAsSent(unsentItems.map(i => i.id));
         setPaymentMode(false);
         setCashMode(false);
       } else {
@@ -199,9 +206,12 @@ export default function OrderSidebar() {
           </div>
         ) : (
           items.map(item => (
-            <li key={item.id} className="bg-tpv-surface p-4 rounded-2xl border border-tpv-border shadow-sm flex flex-col gap-3 animate-in fade-in slide-in-from-right-2">
+            <li key={`${item.id}-${item.sent}`} className={`p-4 rounded-2xl border shadow-sm flex flex-col gap-3 animate-in fade-in slide-in-from-right-2 ${item.sent ? 'bg-tpv-surface border-green-500/20' : 'bg-tpv-surface border-tpv-border'}`}>
               <div className="flex justify-between items-start">
-                <span className="font-bold text-tpv-text pr-2 leading-tight">{item.name}</span>
+                <div className="flex items-center gap-2 pr-2">
+                  {item.sent && <span className="text-green-500 text-xs font-black">✓</span>}
+                  <span className={`font-bold leading-tight ${item.sent ? 'text-tpv-text-muted' : 'text-tpv-text'}`}>{item.name}</span>
+                </div>
                 <span className="font-mono font-black text-tpv-accent shrink-0">
                   {(item.price * item.quantity).toFixed(2)}€
                 </span>
@@ -323,11 +333,11 @@ export default function OrderSidebar() {
                 CUENTA
               </button>
 
-              <button 
-                onClick={() => setPaymentMode(true)}
+              <button
+                onClick={() => hasUnsent ? window.showToast?.('Envía los platos pendientes antes de cobrar', 'error') : setPaymentMode(true)}
                 disabled={items.length === 0}
-                className="flex-1 bg-green-500 border-2 border-green-500 hover:bg-green-600 hover:border-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed font-black py-3 rounded-xl shadow-lg shadow-green-500/20 transition-all flex justify-center items-center gap-2 active:scale-95"
-                title="Cobrar Mesa"
+                className={`flex-1 border-2 text-white font-black py-3 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-95 ${hasUnsent ? 'bg-gray-500 border-gray-500 cursor-not-allowed opacity-60' : 'bg-green-500 border-green-500 hover:bg-green-600 hover:border-green-600 shadow-green-500/20'}`}
+                title={hasUnsent ? 'Hay platos sin enviar' : 'Cobrar Mesa'}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

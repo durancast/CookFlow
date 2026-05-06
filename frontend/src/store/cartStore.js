@@ -7,10 +7,7 @@ export const selectedTable = atom(null);
 
 // ➕ Añadir producto
 export function addToCart(product) {
-    console.log("Intentando añadir al carrito el objeto:", product);
-    console.log("Intentando añadir al carrito el objeto:", product);
-
-    const productId = product.id; 
+    const productId = product.id;
 
     if (!productId) {
         console.error("🚨 ERROR: El producto no tiene un identificador válido.");
@@ -20,15 +17,24 @@ export function addToCart(product) {
     const currentItems = cartItems.get();
     const existingItem = currentItems.find(item => (item.id || item.name) === productId);
 
-    if (existingItem) {
-        cartItems.set(currentItems.map(item => 
-            (item.id || item.name) === productId 
-                ? { ...item, quantity: item.quantity + 1 } 
+    if (existingItem && !existingItem.sent) {
+        // Only increment quantity if the item hasn't been sent yet
+        cartItems.set(currentItems.map(item =>
+            (item.id || item.name) === productId
+                ? { ...item, quantity: item.quantity + 1 }
                 : item
         ));
     } else {
-        cartItems.set([...currentItems, { ...product, quantity: 1, note: '' }]);
+        // Sent items or new items always add as a new unsent line
+        cartItems.set([...currentItems, { ...product, quantity: 1, note: '', sent: false }]);
     }
+}
+
+// ✅ Mark specific item ids as sent
+export function markItemsAsSent(ids) {
+    cartItems.set(cartItems.get().map(item =>
+        ids.includes(item.id) ? { ...item, sent: true } : item
+    ));
 }
 
 // ➖ Actualizar cantidad (+1 o -1)

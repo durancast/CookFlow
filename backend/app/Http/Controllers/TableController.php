@@ -74,7 +74,7 @@ class TableController extends Controller
     {
         $table = Table::findOrFail($id);
         // Ajusta esta URL a la de tu frontend real de clientes
-        $url = "https://cookflow.com/menu?table=" . $table->number;
+        $url = env('APP_PUBLIC_URL', 'http://localhost:4321') . '/menu?table=' . $table->number;
 
         $qrCode = QrCode::size(300)->margin(1)->generate($url);
 
@@ -105,6 +105,20 @@ class TableController extends Controller
         });
 
         return response()->json(['items' => $cartItems]);
+    }
+
+    public function callWaiter(Table $table): JsonResponse
+    {
+        $table->update(['call_waiter' => true]);
+
+        return response()->json(['message' => 'Camarero llamado']);
+    }
+
+    public function clearWaiter(Table $table): JsonResponse
+    {
+        $table->update(['call_waiter' => false]);
+
+        return response()->json(['message' => 'Llamada cancelada']);
     }
 
     // 💸 COBRAR Y LIBERAR MESA

@@ -45,6 +45,7 @@ class ProductController extends Controller
             'price'       => ['sometimes', 'numeric', 'min:0'],
             'category_id' => ['sometimes', 'integer', 'exists:categories,id'],
             'image'       => ['sometimes', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'available'   => ['sometimes', 'boolean'],
         ]);
 
         if ($request->hasFile('image')) {

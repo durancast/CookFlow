@@ -1,5 +1,157 @@
 # Changelog
 
+## [PLAN-PHASE2] Admin Panel + TPV Fixes — 2026-05-06
+
+### Phase 2 — Admin panel wired to real API
+
+#### 2a — Dashboard wired to real API
+- `admin/index.astro` now calls `GET /api/dashboard/stats` for `revenue_today` and `orders_today`
+- Fixed wrong closing tag `</Layout>` → `</AdminLayout>`
+- Added missing `backendUrl` const to the script block
+
+#### 2b — Dynamic category dropdown in products form
+- `admin/productos.astro` category `<select>` now fetches from `GET /api/categories`
+- Removed 4 hardcoded `<option>` tags
+
+#### 2c — "Disponible" toggle in products table
+- New toggle switch column in `admin/productos.astro`
+- Calls `PATCH /api/products/{id}` with `{ available }` — updates in place without reload
+- **Bug fixed:** `available` was missing from `ProductController@update` validation rules — Laravel silently stripped it on every PATCH request
+
+#### 2d — Admin sidebar links
+- Added Categorías, Ventas, Cocina links to `AdminLayout.astro` sidebar
+
+#### 2e — New page `/admin/categorias`
+- Full CRUD: list, create, edit, delete
+- Auto-generates slug from name client-side
+- Delete blocked (button disabled + tooltip) if category has products
+
+#### 2f — New page `/admin/ventas`
+- Date picker (defaults to today), calls `GET /api/reports/daily?date=`
+- 3 stat cards: ingresos, pedidos, ticket medio
+- Product breakdown table
+- Export Excel via `xlsx` library (client-side)
+- Export PDF via `jspdf` + `jspdf-autotable` (client-side)
+- Installed: `xlsx@0.18.5`, `jspdf@4.2.1`, `jspdf-autotable@5.0.7`
+
+### Bugs fixed
+
+#### TPV route broken (`/tpv/tpv`)
+- `frontend/src/pages/tpv/tpv.astro` renamed to `tpv/index.astro` — route is now `/tpv`
+- Login redirect fixed: `index.astro` was sending waiters to `/tpv/tpv` → now `/tpv`
+
+#### Unavailable products showing in TPV
+- `tpv/index.astro` now filters `allProducts.filter(p => p.available !== false)` before rendering
+- Filter runs server-side at page load — unavailable products never reach the DOM
+
+#### `available` flag not persisting
+- `ProductController@update` validation was missing `'available' => ['sometimes', 'boolean']`
+- Laravel discarded the field on every PATCH — toggle appeared to work but reset on refresh
+
+#### Storage symlink missing — images not loading
+- `php artisan storage:link` needed to create `public/storage → storage/app/public`
+- Astro proxy for `/storage` was already correct in `astro.config.mjs`
+
+#### OrderSidebar — comanda/cobrar flow broken
+- `handleSendOrder` was calling `clearOrder()` (clears cart + deselects table) → kicked waiter back to table modal after every comanda sent
+- Fixed: `handleSendOrder` now calls `clearCart()` — table stays selected
+- Table modal now calls `loadTableSelection()` on open (was showing stale state)
+- `loadTableSelection` hoisted to outer script scope so both `selectedTable.subscribe` and `setInterval` share the same function
+
+#### Sent items tracking in cart
+- Cart items now have a `sent: boolean` field
+- `handleSendOrder` sends only `items.filter(i => !i.sent)` — already-sent items are not re-sent
+- After send: items stay in cart, marked `sent: true`, shown with ✓ and dimmed styling
+- COBRAR button grayed out + toast if any unsent items exist — prevents charging for unordered items
+- Re-entering an occupied/pending table: loaded items from active-order come in as `sent: true`
+- Adding same dish after it was sent: creates a new unsent line instead of incrementing the sent one
+
+### New users added (UserSeeder)
+| Name | Email | Password | Role |
+|------|-------|----------|------|
+| NizarAd | nizarad@cookflow.com | `admin` | admin |
+| NizarCam | nizarcam@cookflow.com | `NizarCam` | waiter |
+
+### Files modified
+- `backend/app/Http/Controllers/ProductController.php` — `available` added to update validation
+- `backend/database/seeders/UserSeeder.php` — NizarAd + NizarCam added
+- `frontend/src/layouts/AdminLayout.astro` — Categorías, Ventas, Cocina nav links
+- `frontend/src/pages/admin/index.astro` — real API call, closing tag fix, backendUrl fix
+- `frontend/src/pages/admin/productos.astro` — dynamic categories, disponible toggle
+- `frontend/src/pages/admin/categorias.astro` — **created**
+- `frontend/src/pages/admin/ventas.astro` — **created**
+- `frontend/src/pages/tpv/index.astro` — renamed from tpv.astro, unavailable filter, loadTableSelection hoisted, active-order items marked sent
+- `frontend/src/pages/index.astro` — login redirect `/tpv/tpv` → `/tpv`
+- `frontend/src/components/react/OrderSidebar.jsx` — sent items flow, COBRAR guard
+- `frontend/src/store/cartStore.js` — `sent` flag, `markItemsAsSent()`, addToCart respects sent state
+- `frontend/package.json` — xlsx, jspdf, jspdf-autotable added
+
+---
+
+## [PLAN-PHASE1] Backend Foundations — Columnas, Controladores y Rutas
+
+**Fecha:** 2026-05-06
+
+### Resumen
+
+Implementación completa de la Fase 1 del plan de expansión. Añade soporte para disponibilidad de productos, llamada al camarero, gestión de categorías, reportes diarios y mejoras al dashboard.
+
+### Cambios
+
+#### Migraciones nuevas
+
+| Archivo | Qué hace |
+|---------|----------|
+| `2026_05_06_000001_add_available_to_products_table.php` | Añade `available BOOLEAN DEFAULT true` a `products` |
+| `2026_05_06_000002_add_call_waiter_to_tables_table.php` | Añade `call_waiter BOOLEAN DEFAULT false` a `tables` |
+
+#### Modelos actualizados
+
+- **`Product`** — `available` añadido a `$fillable` + cast `boolean`
+- **`Table`** — `call_waiter` añadido a `$fillable` + cast `boolean`
+
+#### Controladores nuevos
+
+**`CategoryController`** — CRUD completo para categorías:
+- `GET /api/categories` — lista con conteo de productos
+- `POST /api/categories` — crea categoría, auto-genera `slug`
+- `PATCH /api/categories/{id}` — edita nombre y slug
+- `DELETE /api/categories/{id}` — devuelve 422 si la categoría tiene productos
+
+**`ReportController`** — informe de ventas diarias:
+- `GET /api/reports/daily?date=YYYY-MM-DD` — devuelve `revenue`, `order_count`, `avg_ticket` y desglose por producto
+
+#### Controladores modificados
+
+**`DashboardController`** — `GET /api/dashboard/stats` ahora incluye:
+- `orders_today` — pedidos pagados hoy
+- `avg_ticket` — ticket medio del día
+- `orders_by_hour` — array `[{ hour, count }]` (usa `strftime` de SQLite — cambiar a `HOUR()` si se migra a MySQL)
+
+**`TableController`** — dos endpoints nuevos:
+- `POST /api/tables/{table}/call-waiter` — escribe `call_waiter = true` (público, sin auth)
+- `POST /api/tables/{table}/clear-waiter` — escribe `call_waiter = false` (requiere Sanctum)
+- QR URL corregida: ya no es hardcoded a `cookflow.com`, lee `APP_PUBLIC_URL` del `.env`
+
+#### Entorno
+
+- `.env` — añadida `APP_PUBLIC_URL=http://localhost:4321`
+
+### Archivos modificados
+
+- `database/migrations/2026_05_06_000001_add_available_to_products_table.php` — **creado**
+- `database/migrations/2026_05_06_000002_add_call_waiter_to_tables_table.php` — **creado**
+- `app/Models/Product.php` — `$fillable` + `$casts`
+- `app/Models/Table.php` — `$fillable` + `$casts`
+- `app/Http/Controllers/CategoryController.php` — **creado**
+- `app/Http/Controllers/ReportController.php` — **creado**
+- `app/Http/Controllers/DashboardController.php` — stats ampliadas
+- `app/Http/Controllers/TableController.php` — `callWaiter`, `clearWaiter`, QR URL fix
+- `routes/api.php` — rutas de categorías, reports y call-waiter registradas
+- `.env` — `APP_PUBLIC_URL` añadida
+
+---
+
 ## [BACK-502] Mesa pasa a free automáticamente al pagar
 
 **Fecha:** 2026-04-25
