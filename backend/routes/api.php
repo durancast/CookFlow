@@ -29,6 +29,7 @@ Route::post('/tables/{table}/call-waiter', [TableController::class, 'callWaiter'
 Route::post('/tables/{table}/clear-waiter', [TableController::class, 'clearWaiter'])->middleware('auth:sanctum');
 
 // --- PEDIDOS ---
+Route::get('/orders', [OrderController::class, 'index']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
 

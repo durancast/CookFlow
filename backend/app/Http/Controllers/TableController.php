@@ -21,6 +21,11 @@ class TableController extends Controller
         return response()->json($tables);
     }
 
+    public function show(Table $table): JsonResponse
+    {
+        return response()->json($table);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -74,7 +79,7 @@ class TableController extends Controller
     {
         $table = Table::findOrFail($id);
         // Ajusta esta URL a la de tu frontend real de clientes
-        $url = env('APP_PUBLIC_URL', 'http://localhost:4321') . '/menu?table=' . $table->number;
+        $url = env('APP_PUBLIC_URL', 'http://localhost:4321') . '/menu?table=' . $table->id;
 
         $qrCode = QrCode::size(300)->margin(1)->generate($url);
 

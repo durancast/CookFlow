@@ -27,10 +27,10 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
       <header class="shrink-0 p-4 md:p-6 border-b border-tpv-border bg-tpv-surface/80 backdrop-blur-md flex justify-between items-center gap-4">
         <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar flex-1">
           {categories.map((cat) => (
-            <button 
+            <button
               class={`category-btn px-6 py-2.5 rounded-xl border transition-all whitespace-nowrap font-bold text-sm
-                ${cat === 'Todos' 
-                  ? 'bg-tpv-accent border-tpv-accent text-white shadow-lg shadow-tpv-accent/20' 
+                ${cat === 'Todos'
+                  ? 'bg-tpv-accent border-tpv-accent text-white shadow-lg shadow-tpv-accent/20'
                   : 'bg-tpv-bg border-tpv-border text-tpv-text-muted hover:border-tpv-accent hover:text-tpv-accent'}`}
             >
               {cat}
@@ -38,8 +38,20 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
           ))}
         </div>
 
-        <button 
-          id="tpv-logout-btn" 
+        <div class="relative shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tpv-text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            id="tpv-search"
+            type="text"
+            placeholder="Buscar plato..."
+            class="pl-9 pr-4 py-2.5 w-40 xl:w-56 bg-tpv-bg border border-tpv-border rounded-xl text-sm text-tpv-text placeholder:text-tpv-text-muted/50 focus:outline-none focus:border-tpv-accent transition-colors"
+          />
+        </div>
+
+        <button
+          id="tpv-logout-btn"
           class="shrink-0 p-3 rounded-xl bg-tpv-bg border border-tpv-border text-tpv-text-muted hover:text-red-400 hover:border-red-400/30 transition-all active:scale-90"
           title="Cerrar Sesión"
         >
@@ -71,6 +83,23 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
     </aside>
   </div>
 
+  <div id="notes-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-tpv-bg/90 backdrop-blur-md">
+    <div class="bg-tpv-surface w-full max-w-sm rounded-3xl shadow-2xl p-8 border border-tpv-border animate-in fade-in zoom-in-95 duration-150">
+      <h3 id="notes-modal-title" class="text-xl font-black text-tpv-text mb-2"></h3>
+      <p class="text-[11px] uppercase tracking-widest text-tpv-text-muted font-bold mb-5">Añadir nota (opcional)</p>
+      <input
+        id="notes-modal-input"
+        type="text"
+        placeholder="Sin cebolla, punto medio, alérgico a..."
+        class="w-full p-4 bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl focus:outline-none focus:border-tpv-accent transition-colors mb-6 placeholder:text-tpv-text-muted/40 text-sm"
+      />
+      <div class="flex gap-3">
+        <button id="notes-modal-cancel" class="flex-1 py-3 bg-tpv-bg text-tpv-text-muted border border-tpv-border rounded-xl font-black uppercase text-sm transition-all active:scale-95 hover:text-tpv-text">Cancelar</button>
+        <button id="notes-modal-confirm" class="flex-[2] py-3 bg-tpv-accent hover:bg-tpv-accent-hover text-white rounded-xl font-black uppercase text-sm shadow-lg shadow-tpv-accent/20 transition-all active:scale-95">Añadir</button>
+      </div>
+    </div>
+  </div>
+
   <div id="select-table-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-tpv-bg/90 backdrop-blur-md transition-opacity">
     <div class="bg-tpv-surface w-full max-w-4xl rounded-3xl shadow-2xl p-8 border border-tpv-border animate-in fade-in zoom-in-95 duration-200">
       <div class="text-center mb-8">
@@ -85,7 +114,7 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
 </Layout>
 
 <script>
-  import { cartItems, selectedTable } from '../../store/cartStore.js';
+  import { cartItems, selectedTable, addToCart } from '../../store/cartStore.js';
 
   // --- 🛡️ GUARDIÁN DE RUTAS ---
   const token = localStorage.getItem('auth_token');
@@ -166,21 +195,29 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
 
     // --- LÓGICA DE FILTRADO ---
     const categoryButtons = document.querySelectorAll('.category-btn');
-    const dishCards = document.querySelectorAll('.dish-card'); 
-    
+    const dishCards = document.querySelectorAll('.dish-card');
+    let activeCategory = 'all';
+    let searchTerm = '';
+
+    function applyFilters() {
+      dishCards.forEach(card => {
+        const cardCategory = (card.getAttribute('data-category') || '').trim().toLowerCase();
+        const cardName = (card.querySelector('h3')?.textContent || '').trim().toLowerCase();
+        const matchesCategory = activeCategory === 'all' || cardCategory === activeCategory;
+        const matchesSearch = !searchTerm || cardName.includes(searchTerm);
+        if (matchesCategory && matchesSearch) {
+          card.classList.remove('hidden'); card.classList.add('flex');
+        } else {
+          card.classList.add('hidden'); card.classList.remove('flex');
+        }
+      });
+    }
+
     categoryButtons.forEach(button => {
       button.addEventListener('click', () => {
         const buttonText = button.textContent?.trim().toLowerCase();
-        const filterCategory = buttonText === 'todos' ? 'all' : buttonText;
-
-        dishCards.forEach(card => {
-          const cardCategory = (card.getAttribute('data-category') || '').trim().toLowerCase();
-          if (filterCategory === 'all' || cardCategory === filterCategory) {
-            card.classList.remove('hidden'); card.classList.add('flex'); 
-          } else {
-            card.classList.add('hidden'); card.classList.remove('flex'); 
-          }
-        });
+        activeCategory = buttonText === 'todos' ? 'all' : (buttonText || 'all');
+        applyFilters();
 
         categoryButtons.forEach(btn => {
           btn.classList.remove('bg-tpv-accent', 'text-white', 'border-tpv-accent', 'shadow-lg');
@@ -190,24 +227,66 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
       });
     });
 
+    document.getElementById('tpv-search')?.addEventListener('input', (e) => {
+      searchTerm = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      applyFilters();
+    });
+
+    // --- NOTAS MODAL ---
+    let pendingProduct: any = null;
+
+    document.addEventListener('dish-add', (e: Event) => {
+      pendingProduct = (e as CustomEvent).detail;
+      const modal = document.getElementById('notes-modal');
+      const title = document.getElementById('notes-modal-title');
+      const input = document.getElementById('notes-modal-input') as HTMLInputElement;
+      if (modal && title && input) {
+        title.textContent = pendingProduct.name;
+        input.value = '';
+        modal.classList.remove('hidden');
+        setTimeout(() => input.focus(), 50);
+      }
+    });
+
+    function closeNotesModal() {
+      pendingProduct = null;
+      document.getElementById('notes-modal')?.classList.add('hidden');
+    }
+
+    function confirmNotesModal() {
+      if (!pendingProduct) return;
+      const input = document.getElementById('notes-modal-input') as HTMLInputElement;
+      addToCart(pendingProduct, input?.value?.trim() || '');
+      closeNotesModal();
+    }
+
+    document.getElementById('notes-modal-confirm')?.addEventListener('click', confirmNotesModal);
+    document.getElementById('notes-modal-cancel')?.addEventListener('click', closeNotesModal);
+    document.getElementById('notes-modal-input')?.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') confirmNotesModal();
+      else if (e.key === 'Escape') closeNotesModal();
+    });
+
     // 🔥 FUNCIÓN GLOBAL ACTUALIZADA (Soporta Entrar a Mesas Ocupadas o Pendientes)
     (window as any).selectTable = async (id: number, number: number, currentStatus: string) => {
       try {
+        let resolvedStatus = currentStatus;
+
         if (currentStatus === 'occupied' || currentStatus === 'pending') {
           // 1. Si está ocupada o pendiente, avisamos y traemos lo que tenían pedido
           if (!confirm(`La mesa ${number} ya está en servicio. ¿Deseas gestionarla?`)) return;
-          
+
           const res = await fetch(`/api/tables/${id}/active-order`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
           });
-          
+
           if (res.ok) {
             const data = await res.json();
             cartItems.set((data.items || []).map((i: any) => ({ ...i, sent: true })));
           }
         } else {
           // 2. Si está libre, la marcamos como ocupada
-          await fetch(`/api/tables/${id}/status`, { 
+          await fetch(`/api/tables/${id}/status`, {
             method: 'PATCH',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -216,11 +295,12 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
             },
             body: JSON.stringify({ status: 'occupied' })
           });
-          cartItems.set([]); // Vaciamos por si acaso
+          cartItems.set([]);
+          resolvedStatus = 'occupied';
         }
 
-        // 3. Seteamos la mesa en el store
-        selectedTable.set({ id, number });
+        // 3. Seteamos la mesa en el store (con status para OrderSidebar)
+        selectedTable.set({ id, number, status: resolvedStatus });
 
         // 4. Cerramos el modal con animación
         const modal = document.getElementById('select-table-modal');

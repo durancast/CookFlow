@@ -98,12 +98,21 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     tbody.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async e => {
         const el = e.currentTarget as HTMLElement;
-        if (Number(el.dataset.count) > 0) return;
+        if (Number(el.dataset.count) > 0) {
+          (window as any).showToast?.(`No se puede borrar: tiene ${el.dataset.count} producto(s) asociado(s)`, 'error');
+          return;
+        }
         if (!confirm('¿Eliminar categoría?')) return;
-        await fetch(`/api/categories/${el.dataset.id}`, {
+        const res = await fetch(`/api/categories/${el.dataset.id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token()}`, Accept: 'application/json' },
         });
+        if (res.ok) {
+          (window as any).showToast?.('Categoría eliminada', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          (window as any).showToast?.(err.message || 'Error al eliminar', 'error');
+        }
         load();
       });
     });

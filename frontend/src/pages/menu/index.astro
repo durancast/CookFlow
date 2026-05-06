@@ -1,0 +1,166 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+
+const tableId = Astro.url.searchParams.get('table');
+
+// Fetch menu
+const menuRes = await fetch(`${backendUrl}/api/public/menu`);
+const categories = menuRes.ok ? await menuRes.json() : [];
+
+// Fetch table info if ID provided
+let tableNumber: number | null = null;
+if (tableId) {
+  try {
+    const tableRes = await fetch(`${backendUrl}/api/tables/${tableId}`);
+    if (tableRes.ok) {
+      const tableData = await tableRes.json();
+      tableNumber = tableData.number;
+    }
+  } catch (e) {}
+}
+---
+
+<Layout title={tableNumber ? `Mesa ${tableNumber} — CookFlow` : 'Carta — CookFlow'}>
+  <div class="min-h-screen bg-tpv-bg font-sans overflow-y-auto">
+
+    <header class="sticky top-0 z-30 bg-tpv-bg/90 backdrop-blur-md border-b border-tpv-border px-5 py-4">
+      <div class="max-w-2xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-tpv-accent rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-tpv-accent/30">
+            CF
+          </div>
+          <div>
+            <p class="font-black text-tpv-text text-base leading-tight">CookFlow</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-tpv-text-muted">Carta Digital</p>
+          </div>
+        </div>
+        {tableNumber && (
+          <span class="bg-tpv-accent/10 text-tpv-accent border border-tpv-accent/30 text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+            Mesa {tableNumber}
+          </span>
+        )}
+      </div>
+    </header>
+
+    {categories.length === 0 ? (
+      <div class="flex flex-col items-center justify-center min-h-[60vh] text-tpv-text-muted text-center px-6">
+        <p class="text-xl font-black uppercase tracking-tighter">Carta no disponible</p>
+        <p class="text-sm mt-2 opacity-50">Consulta con el personal del local</p>
+      </div>
+    ) : (
+      <div class="max-w-2xl mx-auto px-4 pb-36">
+
+        <nav class="sticky top-[73px] z-20 bg-tpv-bg/90 backdrop-blur-md py-4">
+          <div class="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+            {categories.map((cat: any) => (
+              <a
+                href={`#cat-${cat.id}`}
+                class="shrink-0 px-4 py-2 rounded-xl border border-tpv-border text-tpv-text-muted text-xs font-black uppercase tracking-widest hover:border-tpv-accent hover:text-tpv-accent transition-all"
+              >
+                {cat.name}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        {categories.map((cat: any) => (
+          <section id={`cat-${cat.id}`} class="mb-10 scroll-mt-36">
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-tpv-text-muted mb-4 border-b border-tpv-border pb-3">
+              {cat.name}
+            </h2>
+            <div class="space-y-3">
+              {cat.products.map((product: any) => {
+                const imageUrl = product.image
+                  ? `/storage/products/${product.image}`
+                  : null;
+                return (
+                  <div class="flex items-center gap-4 bg-tpv-surface border border-tpv-border rounded-2xl p-4">
+                    {imageUrl && (
+                      <div class="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-tpv-bg">
+                        <img
+                          src={imageUrl}
+                          alt={product.name}
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                          onerror="this.parentElement.style.display='none'"
+                        />
+                      </div>
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-tpv-text text-base leading-tight">{product.name}</p>
+                      {product.description && (
+                        <p class="text-tpv-text-muted text-xs mt-1 line-clamp-2 leading-relaxed">{product.description}</p>
+                      )}
+                    </div>
+                    <span class="shrink-0 font-mono font-black text-tpv-accent text-lg">
+                      {parseFloat(product.price).toFixed(2)}€
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+
+      </div>
+    )}
+
+    {tableId && (
+      <div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 px-4">
+        <button
+          id="call-waiter-btn"
+          data-table-id={tableId}
+          class="flex items-center gap-3 bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black px-8 py-4 rounded-2xl shadow-2xl shadow-tpv-accent/40 transition-all active:scale-95 border border-white/10 text-sm uppercase tracking-widest"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          Llamar al camarero
+        </button>
+      </div>
+    )}
+
+  </div>
+</Layout>
+
+<script>
+  const btn = document.getElementById('call-waiter-btn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const tableId = btn.getAttribute('data-table-id');
+      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+
+      btn.disabled = true;
+      btn.textContent = 'Llamando...';
+
+      try {
+        const res = await fetch(`${backendUrl}/api/tables/${tableId}/call-waiter`, { method: 'POST' });
+        if (res.ok) {
+          btn.textContent = '✓ Camarero avisado';
+          btn.classList.remove('bg-tpv-accent', 'hover:bg-tpv-accent-hover');
+          btn.classList.add('bg-green-500');
+
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Llamar al camarero';
+            btn.classList.remove('bg-green-500');
+            btn.classList.add('bg-tpv-accent', 'hover:bg-tpv-accent-hover');
+            btn.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Llamar al camarero`;
+          }, 5000);
+        } else {
+          btn.textContent = 'Error — reintentar';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        btn.textContent = 'Sin conexión';
+        btn.disabled = false;
+      }
+    });
+  }
+</script>

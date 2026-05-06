@@ -12,6 +12,23 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $statuses = collect(explode(',', $request->get('status', '')))
+            ->map(fn($s) => trim($s))
+            ->filter(fn($s) => in_array($s, ['pending', 'preparing', 'served', 'paid']))
+            ->values()
+            ->toArray();
+
+        $query = Order::with(['items.product', 'table'])->latest('created_at');
+
+        if (!empty($statuses)) {
+            $query->whereIn('status', $statuses);
+        }
+
+        return response()->json($query->get());
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([

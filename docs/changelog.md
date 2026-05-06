@@ -1,5 +1,83 @@
 # Changelog
 
+## [PLAN-PHASE4] Kitchen Display & Public Menu — 2026-05-06
+
+### Phase 4a — Kitchen display `/cocina`
+- New `KitchenDisplay.jsx` React island — polls `GET /api/orders?status=pending,preparing` every 10s
+- Per-card elapsed timer: green < 5 min, yellow 5–10 min, red > 10 min
+- "Preparando" button (pending → preparing), "Listo ✓" button (preparing → served)
+- Order card shows table number, items + notes, status badge
+- New `cocina/index.astro` shell page — no auth guard (kitchen staff don't need login)
+
+### Phase 4b — Public customer menu `/menu?table={id}`
+- New `menu/index.astro` — fetches `/api/public/menu` server-side + table details via `GET /api/tables/{id}`
+- Products grouped by category with image, name, description, price
+- Sticky category nav pills for quick scroll
+- "Llamar al camarero" floating button — calls `POST /api/tables/{id}/call-waiter`, shows confirmation state for 5s
+
+### Phase 4c — Cocina link in NavSidebar
+- Chef hat icon added above the table list in `NavSidebar.astro`
+
+### Backend changes
+
+#### `OrderController::index` (new)
+- `GET /api/orders?status=pending,preparing` — returns orders with items.product + table, filtered by comma-separated status list
+- No auth required (kitchen display is always-on)
+
+#### `TableController::show` (new)
+- `GET /api/tables/{id}` — returns single table (public menu needs number for display)
+
+#### `TableController::generateQr` — QR URL now uses `$table->id`
+- Was: `?table={number}` → Now: `?table={id}`
+- Public menu uses table ID directly for call-waiter + table lookup
+
+#### `MenuController::index`
+- Products now filtered `where available = true`
+- Categories with zero available products are removed from response
+
+#### `Order` model
+- Added `protected $casts = ['created_at' => 'datetime']` — ensures ISO 8601 in JSON for kitchen timer
+
+### Files modified
+- `backend/app/Models/Order.php` — created_at cast
+- `backend/app/Http/Controllers/OrderController.php` — index() added
+- `backend/app/Http/Controllers/MenuController.php` — available filter + empty category filter
+- `backend/app/Http/Controllers/TableController.php` — show() added, QR URL → id
+- `backend/routes/api.php` — `GET /api/orders` registered
+- `frontend/src/components/react/KitchenDisplay.jsx` — **created**
+- `frontend/src/pages/cocina/index.astro` — **created**
+- `frontend/src/pages/menu/index.astro` — **created**
+- `frontend/src/components/NavSidebar.astro` — Cocina link added
+
+---
+
+## [PLAN-PHASE3] TPV Improvements — 2026-05-06
+
+### Phase 3a — Product search bar
+- Added search input to TPV header (next to category pills, before logout button)
+- Category filter refactored into shared `applyFilters()` function — search and category filters combine correctly
+- Search filters by `h3` text content (product name), case-insensitive, live on `input` event
+
+### Phase 3b — Hide unavailable products *(already done in Phase 2 bugfix)*
+- `tpv/index.astro` SSR filter `allProducts.filter(p => p.available !== false)` was in place — no change needed
+
+### Phase 3c — Quick notes modal on dish click
+- `DishCard.astro` click handler no longer calls `addToCart` directly — dispatches `CustomEvent('dish-add', { detail: product, bubbles: true })` instead
+- New notes modal added to `tpv/index.astro`: shows product name, optional text input, Cancelar / Añadir buttons
+- Enter key confirms, Escape cancels
+- `cartStore.js` `addToCart(product, note = '')` now accepts optional note — if note present, always creates new line even if same product exists unsent
+
+### Phase 3d — Call-waiter bell on table cards *(skipped)*
+- Deferred: no consumer of `call_waiter` flag exists until Phase 4b (public menu page) is built
+- Backend infrastructure already in place (column + endpoints) — trivial to add later
+
+### Files modified
+- `frontend/src/pages/tpv/index.astro` — search input HTML, notes modal HTML, refactored filter JS, addToCart import, modal JS
+- `frontend/src/components/DishCard.astro` — click dispatches `dish-add` CustomEvent instead of direct addToCart
+- `frontend/src/store/cartStore.js` — `addToCart` accepts optional `note` param
+
+---
+
 ## [PLAN-PHASE2] Admin Panel + TPV Fixes — 2026-05-06
 
 ### Phase 2 — Admin panel wired to real API
@@ -66,11 +144,6 @@
 - Re-entering an occupied/pending table: loaded items from active-order come in as `sent: true`
 - Adding same dish after it was sent: creates a new unsent line instead of incrementing the sent one
 
-### New users added (UserSeeder)
-| Name | Email | Password | Role |
-|------|-------|----------|------|
-| NizarAd | nizarad@cookflow.com | `admin` | admin |
-| NizarCam | nizarcam@cookflow.com | `NizarCam` | waiter |
 
 ### Files modified
 - `backend/app/Http/Controllers/ProductController.php` — `available` added to update validation

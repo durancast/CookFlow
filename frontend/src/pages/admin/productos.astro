@@ -157,14 +157,20 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
         if (!confirm('¿Eliminar producto?')) return;
-        
-        await fetch(`/api/products/${id}`, { 
-          method: 'DELETE', 
-          headers: { 
+
+        const res = await fetch(`/api/products/${id}`, {
+          method: 'DELETE',
+          headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
             'Accept': 'application/json'
           }
         });
+        if (res.ok) {
+          (window as any).showToast?.('Producto eliminado', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          (window as any).showToast?.(err.message || 'Error al eliminar', 'error');
+        }
         loadAdminProducts();
       });
     });

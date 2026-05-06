@@ -6,7 +6,7 @@ export const cartItems = atom([]);
 export const selectedTable = atom(null);
 
 // ➕ Añadir producto
-export function addToCart(product) {
+export function addToCart(product, note = '') {
     const productId = product.id;
 
     if (!productId) {
@@ -17,16 +17,16 @@ export function addToCart(product) {
     const currentItems = cartItems.get();
     const existingItem = currentItems.find(item => (item.id || item.name) === productId);
 
-    if (existingItem && !existingItem.sent) {
-        // Only increment quantity if the item hasn't been sent yet
+    if (existingItem && !existingItem.sent && !note) {
+        // Only increment quantity if the item hasn't been sent yet and no specific note
         cartItems.set(currentItems.map(item =>
             (item.id || item.name) === productId
                 ? { ...item, quantity: item.quantity + 1 }
                 : item
         ));
     } else {
-        // Sent items or new items always add as a new unsent line
-        cartItems.set([...currentItems, { ...product, quantity: 1, note: '', sent: false }]);
+        // Sent items, new items, or items with a note always add as a new unsent line
+        cartItems.set([...currentItems, { ...product, quantity: 1, note, sent: false }]);
     }
 }
 

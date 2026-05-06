@@ -11,7 +11,9 @@ class Order extends Model
 
     public $timestamps = false;
 
-    protected $fillable=['table_id', 'waiter_id', 'status', 'total_price'];
+    protected $fillable = ['table_id', 'waiter_id', 'status', 'total_price'];
+
+    protected $casts = ['created_at' => 'datetime'];
 
     public function table(): BelongsTo
     {

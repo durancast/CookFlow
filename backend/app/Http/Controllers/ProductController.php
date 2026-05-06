@@ -66,12 +66,17 @@ class ProductController extends Controller
 
     public function destroy(Product $product): JsonResponse
     {
-        // Al borrar el producto, borramos también su foto
+        if ($product->orderItems()->exists()) {
+            return response()->json([
+                'message' => 'Este producto tiene historial de pedidos y no puede eliminarse. Márcalo como no disponible.',
+            ], 422);
+        }
+
         if ($product->image) {
             Storage::disk('public')->delete('products/' . $product->image);
         }
 
         $product->delete();
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Producto eliminado']);
     }
 }

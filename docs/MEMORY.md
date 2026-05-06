@@ -6,26 +6,23 @@ Memory health: 9/10
 CookFlow — TFG restaurant POS/SaaS. Core flow (login → table → dishes → order → charge) works. Expanding with dashboard, kitchen screen, public menu, and UX polish per the plan in `docs/CookFlow Plan.md`.
 
 ## Where We Left Off
-- **Current task:** Phase 2 complete. Phase 3 not started.
-- **Status:** Phase 1 ✓ | Phase 2 ✓ | Phase 3–5 pending
-- **Next immediate step:** Phase 3a — product search bar in `tpv/index.astro`
+- **Current task:** Phase 5 not started. RBAC plan written, not applied yet.
+- **Status:** Phase 1 ✓ | Phase 2 ✓ | Phase 3 ✓ | Phase 4 ✓ | Phase 5 pending | RBAC planned
+- **Next immediate step:** Apply RBAC plan (`docs/rbac-plan.md`) OR do Phase 5
 - **Open question:** None
 
 ## Completed
-- 2026-05-06 **Phase 1 (1a–1j)** — all backend foundations. See `docs/changelog.md`.
-- 2026-05-06 **Phase 2 (2a–2f)** — admin panel wired + new pages. See `docs/changelog.md`.
-- 2026-05-06 **Bugs fixed** — TPV route, unavailable products, available flag not persisting, storage symlink, OrderSidebar comanda/cobrar flow, sent items tracking.
+- 2026-05-06 **Phase 1 (1a–1j)** — all backend foundations.
+- 2026-05-06 **Phase 2 (2a–2f)** — admin panel wired + new pages.
+- 2026-05-06 **Phase 3 (3a–3c)** — TPV search bar, notes modal. 3d skipped.
+- 2026-05-06 **Phase 4 (4a–4c)** — kitchen display `/cocina`, public menu `/menu`, cocina nav link.
+- 2026-05-06 **Extras** — NavSidebar live table list + status dots, OrderSidebar manual status buttons, selectedTable atom carries status.
+- 2026-05-06 **Bugs fixed** — TPV route, unavailable products, available flag, storage symlink, comanda/cobrar flow, sent items tracking, category delete toast, product delete FK violation (returns 422 with message instead of 500).
 
 ## Active Work
-- [ ] **Phase 3a** — Product search bar in TPV
-- [ ] **Phase 3b** — Hide unavailable products in TPV grid
-- [ ] **Phase 3c** — Quick notes modal on dish click
-- [ ] **Phase 3d** — Call-waiter bell on table cards
-- [ ] **Phase 4a** — Kitchen display page `/cocina`
-- [ ] **Phase 4b** — Public customer menu `/menu?table=X`
-- [ ] **Phase 4c** — Cocina link in `NavSidebar.astro`
-- [ ] **Phase 5a** — `ConfirmDialog.jsx` for COBRAR + deletes
-- [ ] **Phase 5b** — Wire print receipt after COBRAR
+- [ ] **RBAC** — full plan at `docs/rbac-plan.md`. 4 roles: admin/manager/waiter/cook. SSR + middleware. See plan for all files.
+- [ ] **Phase 5a** — `ConfirmDialog.jsx` for COBRAR + admin deletes
+- [ ] **Phase 5b** — Wire print receipt after COBRAR (function exists in `printer.js`)
 
 ## Blockers
 - None
@@ -71,3 +68,6 @@ CookFlow — TFG restaurant POS/SaaS. Core flow (login → table → dishes → 
 |---------|------|---------|
 | 1 | 2026-05-06 | Phase 1 (1a–1j) complete. 2 migrations, 2 model updates, 2 new controllers, 2 enhanced controllers, routes wired, QR URL fixed. |
 | 2 | 2026-05-06 | Phase 2 (2a–2f) complete. Dashboard wired, dynamic categories, disponible toggle, new categorias/ventas pages, Excel+PDF export. Multiple TPV bugs fixed (route, unavailable products, available flag, storage symlink, comanda/cobrar flow, sent items tracking). NizarAd + NizarCam users added. |
+| 3 | 2026-05-06 | Phase 3 (3a–3c) complete. Search bar in TPV header, notes modal on dish click (DishCard → CustomEvent → modal → addToCart with note), cartStore addToCart accepts note param. 3d skipped (call-waiter bell needs public menu page first). |
+| 4 | 2026-05-06 | Phase 4 (4a–4c) complete. Kitchen display `/cocina` (React island, 10s poll, timers, status buttons). Public menu `/menu?table={id}` (server-side fetch, call-waiter button). Cocina link in NavSidebar. Backend: OrderController::index, TableController::show, MenuController available filter, Order created_at cast, QR URL now uses table ID. |
+| 5 | 2026-05-06 | NavSidebar live table list + status dots. OrderSidebar manual status buttons (Libre/En Servicio/Cobrando). selectedTable atom now carries status field. Category delete toast feedback. Product delete 422 guard (FK violation → friendly error). RBAC plan written at docs/rbac-plan.md (not applied). |

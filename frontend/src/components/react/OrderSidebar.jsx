@@ -17,6 +17,27 @@ export default function OrderSidebar() {
   const hasUnsent = unsentItems.length > 0;
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+  // --- 🏷️ CAMBIAR ESTADO MANUAL ---
+  const handleStatusChange = async (newStatus) => {
+    if (!currentTable) return;
+    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+    try {
+      await fetch(`${backendUrl}/api/tables/${currentTable.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      selectedTable.set({ ...currentTable, status: newStatus });
+      const label = newStatus === 'free' ? 'Libre' : newStatus === 'occupied' ? 'En Servicio' : 'Cobrando';
+      if (window.showToast) window.showToast(`Mesa ${currentTable.number} → ${label}`, 'success');
+    } catch (e) {
+      if (window.showToast) window.showToast('Error al cambiar estado', 'error');
+    }
+  };
+
   // --- 🚪 SALIR DE LA MESA ---
   const handleExitTable = async () => {
     if (!currentTable) return;
@@ -125,6 +146,7 @@ export default function OrderSidebar() {
         },
         body: JSON.stringify({ status: 'pending' }) // 👈 ESTADO AMARILLO
       });
+      selectedTable.set({ ...currentTable, status: 'pending' });
       if (window.showToast) window.showToast('Cuenta impresa. Mesa marcada como Pendiente.', 'success');
     } catch (e) {
       console.error("Error al cambiar estado a pendiente", e);
@@ -171,28 +193,52 @@ export default function OrderSidebar() {
 
   return (
     <div className="flex flex-col h-full w-full bg-tpv-bg relative font-sans">
-      <header className="shrink-0 p-6 border-b border-tpv-border bg-tpv-surface flex justify-between items-center">
-        <h2 className="text-xl font-bold flex items-center gap-3 text-tpv-text">
-          <span>Comanda Actual</span>
-          <span className={`text-[10px] py-1 px-3 rounded-full font-black shadow-lg uppercase tracking-widest ${
-            currentTable 
-              ? 'bg-tpv-accent text-white shadow-tpv-accent/20' 
-              : 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
-          }`}>
-            {currentTable ? `Mesa ${currentTable.number}` : 'SIN MESA'}
-          </span>
-        </h2>
-        
+      <header className="shrink-0 p-5 border-b border-tpv-border bg-tpv-surface">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-bold flex items-center gap-3 text-tpv-text">
+            <span>Comanda Actual</span>
+            <span className={`text-[10px] py-1 px-3 rounded-full font-black shadow-lg uppercase tracking-widest ${
+              currentTable
+                ? 'bg-tpv-accent text-white shadow-tpv-accent/20'
+                : 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
+            }`}>
+              {currentTable ? `Mesa ${currentTable.number}` : 'SIN MESA'}
+            </span>
+          </h2>
+
+          {currentTable && (
+            <button
+              onClick={handleExitTable}
+              title="Volver a Sala"
+              className="p-2 bg-tpv-bg border border-tpv-border text-tpv-text-muted hover:text-red-400 hover:border-red-400/30 rounded-xl transition-all active:scale-90"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
         {currentTable && (
-          <button 
-            onClick={handleExitTable}
-            title="Volver a Sala"
-            className="p-2 bg-tpv-bg border border-tpv-border text-tpv-text-muted hover:text-red-400 hover:border-red-400/30 rounded-xl transition-all active:scale-90"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex gap-1.5">
+            {[
+              { value: 'free',     label: 'Libre',      active: 'bg-tpv-text-muted/20 text-tpv-text border border-tpv-border' },
+              { value: 'occupied', label: 'En Servicio', active: 'bg-red-500/15 text-red-400 border border-red-500/30' },
+              { value: 'pending',  label: 'Cobrando',   active: 'bg-yellow-500/15 text-yellow-500 border border-yellow-500/30' },
+            ].map(({ value, label, active }) => (
+              <button
+                key={value}
+                onClick={() => handleStatusChange(value)}
+                className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wide transition-all active:scale-95 ${
+                  currentTable.status === value
+                    ? active
+                    : 'bg-transparent text-tpv-text-muted/40 border border-transparent hover:text-tpv-text-muted hover:border-tpv-border/50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
       </header>
       

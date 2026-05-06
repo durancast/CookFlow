@@ -56,27 +56,24 @@ const imageUrl = product.image
 </article>
 
 <script>
-  import { addToCart } from '../store/cartStore.js';
-
   function setupCartButtons() {
     const buttons = document.querySelectorAll('.add-to-cart-btn');
-    
+
     buttons.forEach(btn => {
       if (btn.getAttribute('data-listener-attached') === 'true') return;
-      
+
       btn.addEventListener('click', (e) => {
         const button = e.currentTarget;
         if (!(button instanceof HTMLButtonElement)) return;
-        
+
         const productData = JSON.parse(button.dataset.product || '{}');
-        addToCart(productData);
+        button.dispatchEvent(new CustomEvent('dish-add', { detail: productData, bubbles: true }));
       });
-      
+
       btn.setAttribute('data-listener-attached', 'true');
     });
   }
 
-  // Ejecutar en carga inicial y tras navegaciones de View Transitions si las usas
   setupCartButtons();
   document.addEventListener('astro:after-swap', setupCartButtons);
 </script>
