@@ -60,4 +60,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/reports/daily', [ReportController::class, 'daily']);
+    Route::get('/reports/range', [ReportController::class, 'range']);
 });

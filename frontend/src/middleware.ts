@@ -8,6 +8,7 @@ const ROUTE_PERMISSIONS: Array<{
   { match: (p) => p === '/cocina',           roles: ['admin', 'manager', 'waiter', 'cook'] },
   { match: (p) => p === '/admin/productos',  roles: ['admin', 'manager'] },
   { match: (p) => p === '/admin/categorias', roles: ['admin', 'manager'] },
+  { match: (p) => p === '/admin/ventas',     roles: ['admin', 'manager'] },
   { match: (p) => p.startsWith('/admin'),    roles: ['admin'] },
 ];
 

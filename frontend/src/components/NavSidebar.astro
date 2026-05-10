@@ -32,6 +32,18 @@
 
   <div class="shrink-0 mt-auto w-full px-2 flex flex-col gap-2 border-t border-tpv-border/30 pt-6">
 
+    <a
+      id="admin-panel-btn"
+      href="/admin"
+      class="hidden flex-col items-center gap-1 py-4 px-2 w-full rounded-2xl text-tpv-accent/70 hover:bg-tpv-accent/10 hover:text-tpv-accent border border-transparent hover:border-tpv-accent/30 transition-all group"
+      title="Panel de Administración"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="text-[9px] font-black uppercase tracking-tighter">Admin</span>
+    </a>
+
     <button class="flex flex-col items-center gap-1 py-4 px-2 w-full rounded-2xl text-tpv-text-muted hover:bg-tpv-surface hover:text-tpv-text transition-all group">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:rotate-45 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
@@ -57,6 +69,7 @@
   import { selectedTable } from '../store/cartStore.js';
 
   let cachedTables: any[] = [];
+  let prevCallWaiterMap: Record<number, boolean> = {};
 
   function tableButtonHTML(table: any, activeId: number | null) {
     const isActive = table.id === activeId;
@@ -74,14 +87,21 @@
       dotCls = 'bg-yellow-500 animate-pulse';
     }
 
+    const bellBadge = table.call_waiter
+      ? `<span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[9px] animate-pulse">🔔</span>`
+      : '';
+
     return `
-      <button
-        onclick="window.selectTable(${table.id}, ${table.number}, '${table.status}')"
-        data-table-id="${table.id}"
-        class="w-full flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition-all active:scale-90 ${cls}">
-        <span class="font-mono font-black text-lg leading-none">${table.number}</span>
-        <div class="w-2 h-2 rounded-full ${dotCls}"></div>
-      </button>`;
+      <div class="relative">
+        <button
+          onclick="window.selectTable(${table.id}, ${table.number}, '${table.status}')"
+          data-table-id="${table.id}"
+          class="w-full flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition-all active:scale-90 ${cls}">
+          <span class="font-mono font-black text-lg leading-none">${table.number}</span>
+          <div class="w-2 h-2 rounded-full ${dotCls}"></div>
+        </button>
+        ${bellBadge}
+      </div>`;
   }
 
   function renderNavTables() {
@@ -100,7 +120,14 @@
         }
       });
       if (!res.ok) return;
-      cachedTables = await res.json();
+      const tables = await res.json();
+      tables.forEach((t: any) => {
+        if (t.call_waiter && !prevCallWaiterMap[t.id]) {
+          (window as any).showToast?.(`🔔 Mesa ${t.number} llama al camarero`, 'success');
+        }
+      });
+      prevCallWaiterMap = Object.fromEntries(tables.map((t: any) => [t.id, !!t.call_waiter]));
+      cachedTables = tables;
       renderNavTables();
     } catch (e) {}
   }
@@ -116,6 +143,13 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    const role = document.cookie.split('; ').find(r => r.startsWith('user_role='))?.split('=')[1];
+    if (role === 'admin' || role === 'manager') {
+      const btn = document.getElementById('admin-panel-btn');
+      btn?.classList.remove('hidden');
+      btn?.classList.add('flex');
+    }
+
     loadNavTables();
     setInterval(loadNavTables, 30000);
   });

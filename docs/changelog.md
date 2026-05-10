@@ -1,5 +1,104 @@
 # Changelog
 
+## [SESSION-9] Admin & UX Polish — Dashboard, Tables Manager, Number Inputs — 2026-05-10
+
+### Features added
+
+#### Admin panel link in TPV nav (role-gated)
+- New hidden `<a id="admin-panel-btn">` link added to the bottom section of `NavSidebar.astro`
+- Becomes visible client-side only for `admin` or `manager` roles by reading the `user_role` cookie on `DOMContentLoaded`
+- Uses the grid icon SVG; styled with `tpv-accent` tones to distinguish it from the other nav items
+- No flash for non-admin roles — element starts hidden in HTML
+
+#### Spinner arrows removed from all number inputs
+- Default browser up/down arrows on `<input type="number">` clashed with the custom dark UI
+- Applied Tailwind arbitrary CSS to every number input across the app:
+  - `[appearance:textfield]` — Firefox / standards
+  - `[&::-webkit-outer-spin-button]:appearance-none` — Chrome / Safari outer arrow
+  - `[&::-webkit-inner-spin-button]:appearance-none` — Chrome / Safari inner arrow
+- Affected inputs: cash calculator in `OrderSidebar.jsx`, price in `admin/productos.astro`, number + capacity in `admin/mesas.astro`
+
+#### Mesas admin page — live status cards
+- Full rewrite of `admin/mesas.astro` replacing the plain table list
+- Status summary bar shows free / occupied / pending counts with colored dots
+- Grid of table cards with: color-coded 2px border, status badge, capacity icon, large monospace number
+- `call_waiter` flag renders a pulsing red 🔔 badge on the card
+- "Ver TPV →" hover link appears on occupied/pending cards
+- Edit / Delete buttons appear on card hover
+- Auto-refresh every 30s; manual refresh button in header
+- Status constants (`STATUS_BORDER`, `STATUS_BADGE`, `STATUS_DOT`) for consistent styling
+
+#### Admin dashboard (index.astro) — improved content
+- Personalized greeting with name extracted from JWT payload (`atob(token.split('.')[1])`)
+- "Abrir TPV" shortcut button in the dashboard header
+- 4 KPI cards (Ventas hoy, Pedidos hoy, Productos, Empleados) in a 2-col / 4-col responsive grid
+- Quick links with inline SVG icons (replacing prior emoji links); added Categorías, Mesas, Ventas sections
+- Live "Sala ahora" mini table grid (1/3 column, right side) — color-coded squares per status with bell indicator
+- `Promise.all` parallel fetch for products, users, stats, and tables
+
+### Files modified
+- `frontend/src/components/NavSidebar.astro` — admin panel button + cookie role check
+- `frontend/src/components/react/OrderSidebar.jsx` — no-spinner classes on cash input
+- `frontend/src/pages/admin/productos.astro` — no-spinner classes on price input
+- `frontend/src/pages/admin/mesas.astro` — full rewrite (live status cards)
+- `frontend/src/pages/admin/index.astro` — full rewrite (improved dashboard)
+
+---
+
+## [SESSION-8] Feature Expansion — Call-Waiter Badge, Range Reports, Self-Ordering, Split Bill — 2026-05-06
+
+### Features added
+
+#### Feature 1: Call-waiter badge in TPV
+- `NavSidebar.astro` table buttons now show a pulsing red 🔔 badge when `table.call_waiter === true`
+- Button wrapper changed to `relative` so the badge (`absolute -top-1 -right-1`) positions correctly
+- Module-level `prevCallWaiterMap` tracks previous poll state — fires a `showToast` only on state transition (new call, not on every poll)
+- `tpv/index.astro` `selectTable()` auto-fires `POST /api/tables/{id}/clear-waiter` when the selected table has an active call — badge disappears on next 30s poll
+
+#### Feature 2: Weekly/monthly reports
+- **Backend** — `ReportController::range()` added: accepts `from`/`to` date params, queries paid orders in range, returns `revenue`, `order_count`, `avg_ticket`, `products[]`, `daily[]`; `daily[]` groups by `DATE(created_at)` for per-day breakdown
+- **Backend** — `GET /api/reports/range` route registered inside `auth:sanctum` group
+- **Frontend** — `admin/ventas.astro` fully redesigned:
+  - Quick selector buttons: Hoy / Esta semana / Este mes / Personalizado
+  - "Personalizado" reveals two `<input type="date">` fields
+  - `loadReport(from, to)` — routes to `/api/reports/daily?date=` for single day, `/api/reports/range?from=&to=` for ranges
+  - Chart.js bar chart (`<canvas id="revenue-chart">`) shown above the product table for multi-day ranges; hidden for single-day
+  - Donut chart for top-product breakdown
+  - PDF/Excel exports prepend date range to report header
+- **Frontend** — `frontend/src/middleware.ts` updated: `/admin/ventas` guard extended from `['admin']` to `['admin', 'manager']`
+- **Installed:** `chart.js` via `pnpm add chart.js`
+
+#### Feature 3: Customer self-ordering from QR menu
+- `menu/index.astro` — vanilla JS cart state `const cart = {}` keyed by product ID
+- Each product card gains `+` / `−` buttons; quantity badge overlays the card when `qty > 0`
+- Sticky bottom cart bar (hidden when cart empty) shows item count + total; "Enviar pedido →" button
+- Confirmation modal lists cart contents with totals; "Confirmar" button POSTs to `/api/orders`
+- Success state replaces cart bar with "✓ Pedido enviado — el equipo lo está preparando"; cart cleared
+- Error state shows inline error, keeps cart intact for retry
+- `tableId` sourced from URL query param (already available server-side)
+
+#### Feature 4: Split bill
+- `OrderSidebar.jsx` — new state: `splitMode`, `splitSide` `{ itemKey: 'A'|'B' }`, `paidTickets` (Set), `splitPayingTicket` (`'A'|'B'|null`)
+- "Dividir cuenta" button rendered in the main action bar alongside COBRAR (only when sent items exist)
+- Split UI activates when `splitMode === true`: lists sent items, each with an A/B pill toggle
+- Live "Ticket A: €X" and "Ticket B: €Y" totals update on every assignment change
+- "Pagar A" / "Pagar B" route into the existing cash/card flow for that ticket's total; on complete calls `printCustomerReceipt()` and marks the ticket in `paidTickets`
+- Both tickets paid → "Cerrar mesa" → calls existing `handleCheckout()` which marks all paid and frees the table
+- "Cancelar" exits split mode and resets all split state; existing payment flow (`paymentMode`, `cashMode`, `handleCheckout`) unchanged
+
+### Files modified
+- `backend/app/Http/Controllers/ReportController.php` — `range()` method added
+- `backend/routes/api.php` — `GET /reports/range` registered
+- `frontend/src/components/NavSidebar.astro` — badge, toast, `prevCallWaiterMap`
+- `frontend/src/pages/tpv/index.astro` — auto-clear `call_waiter` in `selectTable()`
+- `frontend/src/pages/admin/ventas.astro` — full redesign (quick selectors, chart.js, range API)
+- `frontend/src/middleware.ts` — `/admin/ventas` opens to `manager` role
+- `frontend/src/pages/menu/index.astro` — cart state, +/− buttons, sticky bar, confirm modal, order submission
+- `frontend/src/components/react/OrderSidebar.jsx` — split bill state and UI
+- `frontend/package.json` — `chart.js` added
+
+---
+
 ## [SESSION-7] Bug Fixes — Kitchen 500, dashboard MySQL, storage symlink — 2026-05-06
 
 ### Bugs fixed

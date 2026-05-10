@@ -280,6 +280,10 @@ const categories = ['Todos', ...new Set(products.map(p => p.category.name))];
           if (res.ok) {
             const data = await res.json();
             cartItems.set((data.items || []).map((i: any) => ({ ...i, sent: true })));
+            fetch(`/api/tables/${id}/clear-waiter`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+            });
           }
         } else {
           // 2. Si está libre, la marcamos como ocupada
