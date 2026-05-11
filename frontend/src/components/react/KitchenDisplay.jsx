@@ -43,7 +43,7 @@ export default function KitchenDisplay({ readonly = false }) {
 
   useEffect(() => {
     fetchOrders();
-    const id = setInterval(fetchOrders, 10000);
+    const id = setInterval(fetchOrders, 5000);
     return () => clearInterval(id);
   }, [fetchOrders]);
 
