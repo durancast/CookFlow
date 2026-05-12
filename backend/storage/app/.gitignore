@@ -3,3 +3,4 @@
 !public/
 !public/products/
 !public/products/*.webp
+!public/products/*.jpg
