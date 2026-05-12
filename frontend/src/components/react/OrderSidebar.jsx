@@ -74,6 +74,11 @@ export default function OrderSidebar() {
   const handleExitTable = async () => {
     if (!currentTable) return;
 
+    const unsentItems = items.filter(i => !i.sent);
+    if (unsentItems.length > 0) {
+      localStorage.setItem(`draft_table_${currentTable.id}`, JSON.stringify(unsentItems));
+    }
+
     if (items.length === 0) {
       try {
         await fetch(`/api/tables/${currentTable.id}/status`, {
@@ -85,7 +90,7 @@ export default function OrderSidebar() {
           body: JSON.stringify({ status: 'free' })
         });
       } catch (e) {
-        console.error("Error al liberar la mesa:", e);
+        if (window.showToast) window.showToast('Error al liberar la mesa', 'error');
       }
     }
 
@@ -140,6 +145,7 @@ export default function OrderSidebar() {
         if (window.showToast) window.showToast('¡Comanda enviada a cocina! 👨‍🍳');
         printKitchenTicket(unsentItems, currentTable.number);
         markItemsAsSent(unsentItems.map(i => i.id));
+        localStorage.removeItem(`draft_table_${currentTable.id}`);
         setPaymentMode(false);
         setCashMode(false);
       } else {
@@ -177,7 +183,7 @@ export default function OrderSidebar() {
       selectedTable.set({ ...currentTable, status: 'pending' });
       if (window.showToast) window.showToast('Cuenta impresa. Mesa marcada como Pendiente.', 'success');
     } catch (e) {
-      console.error("Error al cambiar estado a pendiente", e);
+      if (window.showToast) window.showToast('Error al cambiar estado a pendiente', 'error');
     }
   };
 
@@ -191,7 +197,6 @@ export default function OrderSidebar() {
       const ticketTotal = splitPayingTicket === 'A' ? ticketATotal : ticketBTotal;
       const ticket = splitPayingTicket;
 
-      if (method === 'card' && !window.confirm(`¿Cobrar Ticket ${ticket}: ${ticketTotal.toFixed(2)}€ con Tarjeta?`)) return;
 
       printCustomerReceipt(ticketItems, currentTable.number, ticketTotal);
       setPaidTickets(prev => new Set([...prev, ticket]));
@@ -204,7 +209,6 @@ export default function OrderSidebar() {
     }
 
     // Full checkout
-    if (method === 'card' && !window.confirm(`¿Seguro que deseas cobrar ${total.toFixed(2)}€ con Tarjeta?`)) return;
 
     const token = localStorage.getItem('auth_token');
 
@@ -223,6 +227,7 @@ export default function OrderSidebar() {
         const metodoText = method === 'cash' ? 'EFECTIVO 💵' : 'TARJETA 💳';
         if (window.showToast) window.showToast(`¡Mesa cobrada en ${metodoText}!`, 'success');
 
+        localStorage.removeItem(`draft_table_${currentTable.id}`);
         clearOrder();
         setPaymentMode(false);
         setCashMode(false);
@@ -252,6 +257,7 @@ export default function OrderSidebar() {
       });
       if (response.ok) {
         if (window.showToast) window.showToast('¡Mesa cerrada!', 'success');
+        localStorage.removeItem(`draft_table_${currentTable.id}`);
         clearOrder();
         resetSplit();
       } else {
@@ -559,10 +565,10 @@ export default function OrderSidebar() {
               </button>
 
               <button
-                onClick={() => hasUnsent ? window.showToast?.('Envía los platos pendientes antes de cobrar', 'error') : setPaymentMode(true)}
+                onClick={() => setPaymentMode(true)}
                 disabled={items.length === 0}
-                className={`flex-1 border-2 text-white font-black py-3 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-95 ${hasUnsent ? 'bg-gray-500 border-gray-500 cursor-not-allowed opacity-60' : 'bg-green-500 border-green-500 hover:bg-green-600 hover:border-green-600 shadow-green-500/20'}`}
-                title={hasUnsent ? 'Hay platos sin enviar' : 'Cobrar Mesa'}
+                className="flex-1 border-2 text-white font-black py-3 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-95 bg-green-500 border-green-500 hover:bg-green-600 hover:border-green-600 shadow-green-500/20 disabled:bg-tpv-border disabled:border-tpv-border disabled:text-tpv-text-muted/30 disabled:cursor-not-allowed disabled:shadow-none"
+                title="Cobrar Mesa"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

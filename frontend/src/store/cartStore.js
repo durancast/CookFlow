@@ -9,10 +9,7 @@ export const selectedTable = atom(null);
 export function addToCart(product, note = '') {
     const productId = product.id;
 
-    if (!productId) {
-        console.error("🚨 ERROR: El producto no tiene un identificador válido.");
-        return;
-    }
+    if (!productId) return;
 
     const currentItems = cartItems.get();
     const existingItem = currentItems.find(item => (item.id || item.name) === productId);
@@ -61,8 +58,7 @@ export function addNoteToItem(productId, note) {
 
 // 🧹 Vaciar carrito
 export function clearCart() {
-    console.log("🧹 Vaciando el carrito en el store global...");
-    cartItems.set([]); // Reseteamos a un array vacío
+    cartItems.set([]);
 }
 
 // 🗑️ Eliminar el producto de un solo clic

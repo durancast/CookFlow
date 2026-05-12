@@ -76,8 +76,8 @@ import Layout from "../layouts/Layout.astro";
         document.cookie = `user_role=${role}; path=/; SameSite=Strict; Max-Age=86400`;
 
         const redirects: Record<string, string> = {
-          admin:   '/admin/empleados',
-          manager: '/admin/productos',
+          admin:   '/admin',
+          manager: '/admin',
           waiter:  '/tpv',
           cook:    '/cocina',
         };

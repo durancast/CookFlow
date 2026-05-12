@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 
 const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+const restaurantName = import.meta.env.PUBLIC_RESTAURANT_NAME || 'CookFlow';
 
 const tableId = Astro.url.searchParams.get('table');
 
@@ -20,7 +21,7 @@ if (tableId) {
 }
 ---
 
-<Layout title={tableNumber ? `Mesa ${tableNumber} — CookFlow` : 'Carta — CookFlow'}>
+<Layout title={tableNumber ? `Mesa ${tableNumber} — ${restaurantName}` : `Carta — ${restaurantName}`}>
   <div class="min-h-screen bg-tpv-bg font-sans overflow-y-auto">
 
     <header class="sticky top-0 z-30 bg-tpv-bg/90 backdrop-blur-md border-b border-tpv-border px-5 py-4">
@@ -30,7 +31,7 @@ if (tableId) {
             CF
           </div>
           <div>
-            <p class="font-black text-tpv-text text-base leading-tight">CookFlow</p>
+            <p class="font-black text-tpv-text text-base leading-tight">{restaurantName}</p>
             <p class="text-[10px] font-bold uppercase tracking-widest text-tpv-text-muted">Carta Digital</p>
           </div>
         </div>

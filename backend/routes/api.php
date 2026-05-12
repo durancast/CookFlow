@@ -16,7 +16,7 @@ Route::get('/public/menu', [MenuController::class, 'index']);
 // --- PRODUCTOS ---
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
-Route::middleware(['auth:sanctum', 'role:admin,manager'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{product}', [ProductController::class, 'update']);
     Route::patch('/products/{product}', [ProductController::class, 'update']);
@@ -25,7 +25,7 @@ Route::middleware(['auth:sanctum', 'role:admin,manager'])->group(function () {
 
 // --- CATEGORÍAS ---
 Route::get('/categories', [CategoryController::class, 'index']);
-Route::middleware(['auth:sanctum', 'role:admin,manager'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::put('/categories/{category}', [CategoryController::class, 'update']);
     Route::patch('/categories/{category}', [CategoryController::class, 'update']);

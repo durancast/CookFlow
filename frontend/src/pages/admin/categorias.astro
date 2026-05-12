@@ -2,7 +2,7 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 
 const role = Astro.cookies.get('user_role')?.value ?? '';
-const canEdit = role === 'admin' || role === 'manager';
+const canEdit = role === 'admin';
 ---
 
 <AdminLayout title="Categorías">
@@ -100,7 +100,7 @@ const canEdit = role === 'admin' || role === 'manager';
           <td class="p-4 font-bold text-tpv-text">${c.name}</td>
           <td class="p-4 font-mono text-xs text-tpv-text-muted">${c.slug}</td>
           <td class="p-4 text-right space-x-2">
-            <button class="edit-btn text-tpv-accent font-bold" data-id="${c.id}" data-name="${c.name}">Editar</button>
+            ${canEdit ? `<button class="edit-btn text-tpv-accent font-bold" data-id="${c.id}" data-name="${c.name}">Editar</button>` : ''}
             ${deleteBtn}
           </td>
         </tr>

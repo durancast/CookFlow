@@ -1,14 +1,14 @@
 # Project Memory
-Last updated: 2026-05-06 | Session 7 | Branch: develop
+Last updated: 2026-05-12 | Session 8 | Branch: develop
 Memory health: 10/10
 
 ## Project Overview
 CookFlow — TFG restaurant POS/SaaS. Core flow (login → table → dishes → order → charge) works. Expanding with dashboard, kitchen screen, public menu, and UX polish per the plan in `docs/CookFlow Plan.md`.
 
 ## Where We Left Off
-- **Current task:** Phase 5 not started. RBAC applied.
-- **Status:** Phase 1 ✓ | Phase 2 ✓ | Phase 3 ✓ | Phase 4 ✓ | Phase 5 pending | RBAC ✓
-- **Next immediate step:** Phase 5a (ConfirmDialog) + Phase 5b (print receipt)
+- **Current task:** All phases complete. Starting fresh session 2026-05-12.
+- **Status:** Phase 1 ✓ | Phase 2 ✓ | Phase 3 ✓ | Phase 4 ✓ | Phase 5 ✓ | RBAC ✓
+- **Next immediate step:** TBD
 - **Open question:** None
 
 ## Completed
@@ -20,10 +20,10 @@ CookFlow — TFG restaurant POS/SaaS. Core flow (login → table → dishes → 
 - 2026-05-06 **RBAC** — CheckRole middleware, role migration (string), Astro SSR middleware, 403 page, empleados page.
 - 2026-05-06 **Bugs fixed** — TPV route, unavailable products, available flag, storage symlink, comanda/cobrar flow, sent items tracking, category delete toast, product delete FK violation, KitchenDisplay auth header (401 silent fail), stale route cache (optimize:clear), import.meta SyntaxError in productos, AdminMiddleware phantom alias, multi-round cart (getActiveOrder fetches all non-paid orders), checkout bulk-paid all rounds.
 - 2026-05-06 **Session 7 bugs** — Kitchen 500 (`route[login]` crash → `redirectGuestsTo(null)` + orders status made public), dashboard 500 (`strftime` → `HOUR()` for MySQL), product images 403 (storage symlink missing → `storage:link`).
+- 2026-05-12 **Phase 5** — ConfirmDialog + print receipt done (not logged at time, confirmed complete session 8).
 
 ## Active Work
-- [ ] **Phase 5a** — `ConfirmDialog.jsx` for COBRAR + admin deletes
-- [ ] **Phase 5b** — Wire print receipt after COBRAR (function exists in `printer.js`)
+- Nothing in progress. All phases done.
 
 ## Blockers
 - None

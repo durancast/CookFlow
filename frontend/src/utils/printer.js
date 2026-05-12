@@ -91,8 +91,8 @@ export function printCustomerReceipt(items, tableNumber, total) {
   `).join('');
 
   const html = `
-    <div class="text-center font-bold text-2xl">CookFlow</div>
-    <div class="text-center">Restaurante Demo, Local 1</div>
+    <div class="text-center font-bold text-2xl">${import.meta.env.PUBLIC_RESTAURANT_NAME || 'CookFlow'}</div>
+    <div class="text-center">${import.meta.env.PUBLIC_RESTAURANT_ADDRESS || ''}</div>
     <div class="divider"></div>
     <div><b>MESA: ${tableNumber}</b></div>
     <div>Fecha: ${date}</div>

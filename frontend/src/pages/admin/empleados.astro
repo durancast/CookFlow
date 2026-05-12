@@ -1,5 +1,7 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const canEdit = role === 'admin';
 ---
 
 <AdminLayout title="Gestión de Empleados">
@@ -8,9 +10,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <h1 class="text-3xl font-bold text-tpv-text tracking-tight">Personal</h1>
       <p class="text-tpv-text-muted mt-1 font-medium">Gestiona los accesos de tu equipo</p>
     </div>
-    <button id="open-modal-btn" class="bg-tpv-accent text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2">
-      Añadir Empleado
-    </button>
+    {canEdit && (
+      <button id="open-modal-btn" class="bg-tpv-accent text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+        Añadir Empleado
+      </button>
+    )}
   </header>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="employees-grid"></div>
@@ -37,6 +41,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </AdminLayout>
 
 <script>
+  const canEdit = document.cookie.match(/user_role=([^;]+)/)?.[1] === 'admin';
   const grid = document.getElementById('employees-grid');
   const modal = document.getElementById('employee-modal');
   const form = document.getElementById('employee-form') as HTMLFormElement;
@@ -63,9 +68,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         </div>
         <h3 class="text-xl font-black">${u.name}</h3>
         <p class="text-[10px] uppercase text-tpv-accent font-black">${u.role}</p>
-        <button onclick="deleteUser(${u.id})" class="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-          Borrar
-        </button>
+        ${canEdit ? `<button onclick="deleteUser(${u.id})" class="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-all">Borrar</button>` : ''}
       </div>
     `).join('');
   }

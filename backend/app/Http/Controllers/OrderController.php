@@ -49,7 +49,7 @@ class OrderController extends Controller
         $order = DB::transaction(function () use ($validated, $prices, $total) {
             $order = Order::create([
                 'table_id'    => $validated['table_id'],
-                'waiter_id' => Auth::id() ?? 1,
+                'waiter_id' => Auth::guard('sanctum')->id() ?? 1,
                 'total_price' => $total,       
                 'status'      => 'pending',
             ]);

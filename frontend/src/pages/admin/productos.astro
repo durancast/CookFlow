@@ -2,7 +2,7 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 
 const role = Astro.cookies.get('user_role')?.value ?? '';
-const canEdit = role === 'admin' || role === 'manager';
+const canEdit = role === 'admin';
 ---
 
 <AdminLayout title="Gestión de Productos">
@@ -110,6 +110,11 @@ const canEdit = role === 'admin' || role === 'manager';
       const response = await fetch("/api/products", { headers: { 'Accept': 'application/json' } });
       const products = await response.json();
 
+      if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-tpv-text-muted font-bold uppercase tracking-widest text-sm">Sin productos. Añade el primero.</td></tr>`;
+        return;
+      }
+
       tbody.innerHTML = products.map((product) => {
         const imageUrl = product.image
           ? `/storage/products/${product.image}`
@@ -131,11 +136,11 @@ const canEdit = role === 'admin' || role === 'manager';
               </button>
             </td>
             <td class="p-4 text-right space-x-2">
-              <button class="edit-btn text-tpv-accent font-bold"
+              ${canEdit ? `<button class="edit-btn text-tpv-accent font-bold"
                 data-id="${product.id}"
                 data-name="${product.name}"
                 data-price="${product.price}"
-                data-category="${product.category_id}">Editar</button>
+                data-category="${product.category_id}">Editar</button>` : ''}
               ${deleteBtn}
             </td>
           </tr>
@@ -152,7 +157,6 @@ const canEdit = role === 'admin' || role === 'manager';
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.dataset.id;
-        if (!confirm('¿Eliminar producto?')) return;
         const res = await fetch(`/api/products/${id}`, {
           method: 'DELETE',
           headers: {
@@ -224,7 +228,7 @@ const canEdit = role === 'admin' || role === 'manager';
       toggleModal(false);
       loadAdminProducts();
     } else {
-      alert("Error al guardar el producto");
+      window.showToast?.('Error al guardar el producto', 'error');
     }
   });
 

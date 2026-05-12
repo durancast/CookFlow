@@ -172,7 +172,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
       const tables: any[] = await resTables.json();
       renderMiniTableGrid(tables);
-    } catch {}
+    } catch {
+      document.getElementById('stat-sales')!.textContent = 'Error';
+    }
   }
 
   function renderMiniTableGrid(tables: any[]) {
@@ -205,5 +207,5 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   });
 
   loadDashboard();
-  setInterval(loadDashboard, 5000);
+  setInterval(loadDashboard, 30000);
 </script>
