@@ -66,7 +66,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     </div>
 
     <!-- Bottom row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
       <!-- Quick links (2/3) -->
       <div class="lg:col-span-2 bg-tpv-surface border border-tpv-border p-6 rounded-3xl">
@@ -130,10 +130,21 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <h2 class="text-sm font-black text-tpv-text uppercase tracking-wider">Sala ahora</h2>
           <span id="occupancy-label" class="text-xs font-bold text-tpv-text-muted font-mono"></span>
         </div>
-        <div id="mini-table-grid" class="flex-1 grid grid-cols-4 gap-2 content-start"></div>
-        <a href="/admin/mesas" class="mt-4 text-center text-xs font-black text-tpv-accent hover:underline uppercase tracking-wider">
-          Gestionar mesas →
-        </a>
+        <div id="mini-table-grid" class="grid grid-cols-4 gap-2 content-start flex-1"></div>
+        <div class="flex items-center justify-between mt-4">
+          <button id="tables-prev" class="p-1.5 rounded-lg border border-tpv-border text-tpv-text-muted hover:text-tpv-accent hover:border-tpv-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Anterior">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="flex items-center gap-2">
+            <span id="tables-page-dots" class="flex gap-1"></span>
+            <a href="/admin/mesas" class="text-xs font-black text-tpv-accent hover:underline uppercase tracking-wider ml-1">
+              Ver todas →
+            </a>
+          </div>
+          <button id="tables-next" class="p-1.5 rounded-lg border border-tpv-border text-tpv-text-muted hover:text-tpv-accent hover:border-tpv-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Siguiente">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -177,13 +188,27 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     }
   }
 
+  const TABLES_PER_PAGE = 12; // 4 cols × 3 rows
+  let allTables: any[] = [];
+  let currentPage = 0;
+
   function renderMiniTableGrid(tables: any[]) {
-    const grid = document.getElementById('mini-table-grid')!;
+    allTables = tables;
     const occupied = tables.filter(t => t.status === 'occupied').length;
     const pending  = tables.filter(t => t.status === 'pending').length;
-
     document.getElementById('occupancy-label')!.textContent =
       `${occupied + pending}/${tables.length} ocupadas`;
+    renderPage(currentPage);
+  }
+
+  function renderPage(page: number) {
+    const grid  = document.getElementById('mini-table-grid')!;
+    const dots  = document.getElementById('tables-page-dots')!;
+    const prev  = document.getElementById('tables-prev') as HTMLButtonElement;
+    const next  = document.getElementById('tables-next') as HTMLButtonElement;
+    const total = Math.ceil(allTables.length / TABLES_PER_PAGE);
+
+    currentPage = Math.max(0, Math.min(page, total - 1));
 
     const colorMap: Record<string, string> = {
       free:     'bg-tpv-bg border-tpv-border text-tpv-text-muted',
@@ -191,13 +216,24 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       pending:  'bg-yellow-500/15 border-yellow-500/40 text-yellow-500',
     };
 
-    grid.innerHTML = tables.map(t => `
+    const slice = allTables.slice(currentPage * TABLES_PER_PAGE, (currentPage + 1) * TABLES_PER_PAGE);
+    grid.innerHTML = slice.map(t => `
       <div class="aspect-square rounded-xl border ${colorMap[t.status] || colorMap.free} flex flex-col items-center justify-center gap-0.5" title="Mesa ${t.number} — ${t.status}">
         <span class="text-sm font-black font-mono leading-none">${t.number}</span>
         ${t.call_waiter ? '<span class="text-[8px]">🔔</span>' : ''}
       </div>
     `).join('');
+
+    dots.innerHTML = Array.from({ length: total }, (_, i) =>
+      `<span class="w-1.5 h-1.5 rounded-full transition-all ${i === currentPage ? 'bg-tpv-accent scale-110' : 'bg-tpv-border'}"></span>`
+    ).join('');
+
+    prev.disabled = currentPage === 0;
+    next.disabled = currentPage >= total - 1;
   }
+
+  document.getElementById('tables-prev')?.addEventListener('click', () => renderPage(currentPage - 1));
+  document.getElementById('tables-next')?.addEventListener('click', () => renderPage(currentPage + 1));
 
   document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.clear();
