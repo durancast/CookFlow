@@ -2,9 +2,9 @@
 
 <div align="center">
 
-**CookFlow** es una solución SaaS integral diseñada para optimizar la operativa de restaurantes, permitiendo la gestión de pedidos, control de mesas y un terminal de punto de venta (TPV) ágil y moderno.
+**CookFlow** es una solución SaaS integral diseñada para optimizar la operativa diaria de los restaurantes, permitiendo la gestión centralizada de pedidos, el control del estado de las mesas en tiempo real y un terminal de punto de venta (TPV) ágil y moderno.
 
-Este proyecto se desarrolla como **Trabajo de Fin de Grado (TFG)** para el ciclo de **2º de DAW**.
+Este proyecto nació como **Trabajo de Fin de Grado (TFG)** para el ciclo de **2º de DAW**. Más allá de ser un proyecto educativo, fue planteado con estándares de producción: código limpio, rendimiento optimizado y una **arquitectura de islas** para asegurar la mejor experiencia de usuario.
 
 ![Astro](https://img.shields.io/badge/Astro-BC52EE?style=flat-square&logo=astro&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
@@ -51,7 +51,7 @@ Este proyecto se desarrolla como **Trabajo de Fin de Grado (TFG)** para el ciclo
 - ✅ Acceso basado en roles
 
 ### Terminal TPV (Front-End)
-- ✅ Interfaz responsiva con Astro + React + Tailwind
+- ✅ Interfaz responsiva con Astro + React + Tailwind y diseño UI/UX en Dark Mode
 - ✅ Visualización del menú categorizado
 - ✅ Carrito de compras integrado
 - ✅ Gestión de mesas en tiempo real
@@ -59,6 +59,8 @@ Este proyecto se desarrolla como **Trabajo de Fin de Grado (TFG)** para el ciclo
 ---
 
 ## 🚀 Tecnologías Principales
+
+Para el Frontend se ha implementado una **Arquitectura de Islas**, utilizando Astro para una carga inicial estática ultrarrápida y React para los componentes altamente interactivos.
 
 ### Frontend
 - **Astro 5.17** - Framework moderno con renderizado parcial
@@ -93,7 +95,7 @@ Este proyecto se desarrolla como **Trabajo de Fin de Grado (TFG)** para el ciclo
 
 ## 👥 Equipo de Desarrollo
 
-* **Alejandro Durán** - *Frontend*
+* **Alejandro Durán** - *Tech Lead / Frontend Developer* (Definición de arquitectura, desarrollo integral del cliente y soporte en lógica Backend)
 * **Nizar** - *Backend & API Developer*
 * **Luis** - *Database & Data Modeling*
 
