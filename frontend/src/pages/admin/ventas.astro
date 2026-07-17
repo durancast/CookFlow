@@ -1,0 +1,665 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Ventas">
+
+  <!-- HEADER -->
+  <header class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-tpv-text tracking-tight">Informe de Ventas</h1>
+      <p id="period-label" class="text-tpv-text-muted mt-1 text-sm">Selecciona un período para comenzar</p>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      <button id="export-excel-btn"
+        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-40">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        </svg>
+        Excel
+      </button>
+      <button id="export-pdf-btn"
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-40">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- FILTERS -->
+  <div class="flex flex-wrap items-center gap-3 mb-8 p-4 bg-tpv-surface border border-tpv-border rounded-2xl">
+    <div class="flex gap-2 flex-wrap">
+      <button data-range="today"
+        class="range-btn px-4 py-2 rounded-xl font-bold text-sm border transition-all bg-tpv-accent border-tpv-accent text-white">
+        Hoy
+      </button>
+      <button data-range="week"
+        class="range-btn px-4 py-2 rounded-xl font-bold text-sm border transition-all border-tpv-border text-tpv-text-muted hover:border-tpv-accent hover:text-tpv-accent">
+        Esta semana
+      </button>
+      <button data-range="month"
+        class="range-btn px-4 py-2 rounded-xl font-bold text-sm border transition-all border-tpv-border text-tpv-text-muted hover:border-tpv-accent hover:text-tpv-accent">
+        Este mes
+      </button>
+      <button data-range="custom"
+        class="range-btn px-4 py-2 rounded-xl font-bold text-sm border transition-all border-tpv-border text-tpv-text-muted hover:border-tpv-accent hover:text-tpv-accent">
+        Personalizado
+      </button>
+    </div>
+
+    <div id="custom-dates" class="hidden flex items-center gap-2 ml-2">
+      <input type="date" id="date-from"
+        class="bg-tpv-bg border border-tpv-border text-tpv-text rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-tpv-accent text-sm font-mono">
+      <span class="text-tpv-text-muted font-bold">→</span>
+      <input type="date" id="date-to"
+        class="bg-tpv-bg border border-tpv-border text-tpv-text rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-tpv-accent text-sm font-mono">
+    </div>
+
+    <!-- Chart type toggle -->
+    <div class="ml-auto flex items-center gap-1 bg-tpv-bg border border-tpv-border rounded-xl p-1">
+      <button id="chart-bar-btn"
+        class="chart-type-btn px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all bg-tpv-accent text-white">
+        Barras
+      </button>
+      <button id="chart-line-btn"
+        class="chart-type-btn px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all text-tpv-text-muted hover:text-tpv-text">
+        Línea
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
+    <!-- Ingresos -->
+    <div class="relative bg-tpv-surface border border-tpv-border p-6 rounded-3xl overflow-hidden group hover:border-tpv-accent/40 transition-all">
+      <div class="absolute inset-0 bg-gradient-to-br from-tpv-accent/5 to-transparent pointer-events-none"></div>
+      <div class="flex items-start justify-between mb-4">
+        <div class="w-10 h-10 bg-tpv-accent/15 rounded-2xl flex items-center justify-center">
+          <svg class="h-5 w-5 text-tpv-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-tpv-text-muted">Ingresos</span>
+      </div>
+      <p id="stat-revenue" class="text-4xl font-black text-tpv-text font-mono">—</p>
+      <p class="text-tpv-text-muted text-xs mt-1">Total del período</p>
+    </div>
+
+    <!-- Pedidos -->
+    <div class="relative bg-tpv-surface border border-tpv-border p-6 rounded-3xl overflow-hidden group hover:border-purple-500/40 transition-all">
+      <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
+      <div class="flex items-start justify-between mb-4">
+        <div class="w-10 h-10 bg-purple-500/15 rounded-2xl flex items-center justify-center">
+          <svg class="h-5 w-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-tpv-text-muted">Pedidos</span>
+      </div>
+      <p id="stat-orders" class="text-4xl font-black text-tpv-text font-mono">—</p>
+      <p class="text-tpv-text-muted text-xs mt-1">Comandas cobradas</p>
+    </div>
+
+    <!-- Ticket medio -->
+    <div class="relative bg-tpv-surface border border-tpv-border p-6 rounded-3xl overflow-hidden group hover:border-teal-500/40 transition-all">
+      <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none"></div>
+      <div class="flex items-start justify-between mb-4">
+        <div class="w-10 h-10 bg-teal-500/15 rounded-2xl flex items-center justify-center">
+          <svg class="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-tpv-text-muted">Ticket medio</span>
+      </div>
+      <p id="stat-avg" class="text-4xl font-black text-tpv-text font-mono">—</p>
+      <p class="text-tpv-text-muted text-xs mt-1">Por pedido</p>
+    </div>
+
+  </div>
+
+  <!-- CHARTS -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+    <!-- Revenue chart (2/3) -->
+    <div id="chart-container" class="hidden lg:col-span-2 bg-tpv-surface border border-tpv-border rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-black text-tpv-text uppercase tracking-wider">Ingresos por día</h3>
+          <p id="chart-subtitle" class="text-xs text-tpv-text-muted mt-0.5"></p>
+        </div>
+      </div>
+      <canvas id="revenue-chart"></canvas>
+    </div>
+
+    <!-- Products donut chart (1/3) -->
+    <div id="donut-container" class="hidden bg-tpv-surface border border-tpv-border rounded-2xl p-6 flex flex-col">
+      <div class="mb-4">
+        <h3 class="text-sm font-black text-tpv-text uppercase tracking-wider">Top productos</h3>
+        <p class="text-xs text-tpv-text-muted mt-0.5">Por ingresos</p>
+      </div>
+      <div class="flex-1 flex items-center justify-center">
+        <div class="relative w-48 h-48">
+          <canvas id="donut-chart"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <p id="donut-center-value" class="text-xl font-black font-mono text-tpv-text"></p>
+            <p class="text-[10px] text-tpv-text-muted uppercase tracking-wider">Total</p>
+          </div>
+        </div>
+      </div>
+      <div id="donut-legend" class="mt-4 space-y-2"></div>
+    </div>
+
+  </div>
+
+  <!-- PRODUCTS TABLE -->
+  <div class="bg-tpv-surface border border-tpv-border rounded-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-tpv-border">
+      <h3 class="text-sm font-black text-tpv-text uppercase tracking-wider">Desglose por producto</h3>
+      <p id="table-count" class="text-xs text-tpv-text-muted"></p>
+    </div>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-tpv-border">
+          <th class="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-tpv-text-muted cursor-pointer hover:text-tpv-text transition-colors select-none" data-sort="name">
+            Producto <span class="sort-icon opacity-30">↕</span>
+          </th>
+          <th class="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-tpv-text-muted text-center cursor-pointer hover:text-tpv-text transition-colors select-none" data-sort="quantity">
+            Unidades <span class="sort-icon opacity-30">↕</span>
+          </th>
+          <th class="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-tpv-text-muted text-right cursor-pointer hover:text-tpv-text transition-colors select-none" data-sort="total">
+            Total <span class="sort-icon opacity-30">↕</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="products-tbody" class="divide-y divide-tpv-border/50">
+        <tr>
+          <td colspan="3" class="px-6 py-12 text-center text-tpv-text-muted">
+            <div class="flex flex-col items-center gap-3">
+              <svg class="h-10 w-10 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+              </svg>
+              <span class="text-sm">Selecciona un período</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</AdminLayout>
+
+<script>
+  import * as XLSX from 'xlsx';
+  import jsPDF from 'jspdf';
+  import autoTable from 'jspdf-autotable';
+  import {
+    Chart,
+    BarController, BarElement,
+    LineController, LineElement, PointElement,
+    DoughnutController, ArcElement,
+    CategoryScale, LinearScale,
+    Tooltip, Legend, Filler,
+  } from 'chart.js';
+
+  Chart.register(
+    BarController, BarElement,
+    LineController, LineElement, PointElement,
+    DoughnutController, ArcElement,
+    CategoryScale, LinearScale,
+    Tooltip, Legend, Filler,
+  );
+
+  // ── State ────────────────────────────────────────────────────────────────────
+  const token = () => localStorage.getItem('auth_token');
+  let reportData: any = null;
+  let currentFrom = '';
+  let currentTo = '';
+  let chartType: 'bar' | 'line' = 'bar';
+  let sortKey: 'name' | 'quantity' | 'total' = 'total';
+  let sortDir: 1 | -1 = -1;
+  let revenueChart: Chart | null = null;
+  let donutChart: Chart | null = null;
+
+  // ── DOM refs ─────────────────────────────────────────────────────────────────
+  const tbody         = document.getElementById('products-tbody')!;
+  const chartContainer  = document.getElementById('chart-container')!;
+  const donutContainer  = document.getElementById('donut-container')!;
+  const revenueCanvas   = document.getElementById('revenue-chart') as HTMLCanvasElement;
+  const donutCanvas     = document.getElementById('donut-chart') as HTMLCanvasElement;
+  const donutLegend     = document.getElementById('donut-legend')!;
+  const donutCenterValue = document.getElementById('donut-center-value')!;
+  const periodLabel      = document.getElementById('period-label')!;
+  const tableCount       = document.getElementById('table-count')!;
+  const chartSubtitle    = document.getElementById('chart-subtitle')!;
+
+  // ── Chart palette ─────────────────────────────────────────────────────────────
+  const PALETTE = [
+    { bg: 'rgba(99,102,241,0.85)',  border: 'rgb(99,102,241)',  text: '#818cf8' },
+    { bg: 'rgba(168,85,247,0.85)',  border: 'rgb(168,85,247)',  text: '#c084fc' },
+    { bg: 'rgba(236,72,153,0.85)',  border: 'rgb(236,72,153)',  text: '#f472b6' },
+    { bg: 'rgba(20,184,166,0.85)',  border: 'rgb(20,184,166)',  text: '#2dd4bf' },
+    { bg: 'rgba(251,191,36,0.85)',  border: 'rgb(251,191,36)',  text: '#fbbf24' },
+    { bg: 'rgba(107,114,128,0.85)', border: 'rgb(107,114,128)', text: '#9ca3af' },
+  ];
+
+  const DARK_GRID = 'rgba(255,255,255,0.06)';
+  const DARK_TICK = 'rgba(255,255,255,0.35)';
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  function today(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function startOfWeek(): string {
+    const d = new Date();
+    const diff = d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1);
+    return new Date(d.setDate(diff)).toISOString().slice(0, 10);
+  }
+  function startOfMonth(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  }
+  function fmtDate(iso: string): string {
+    const [, m, dd] = iso.split('-');
+    return `${dd}/${m}`;
+  }
+  function fmtEur(n: number): string {
+    return n.toFixed(2) + '€';
+  }
+
+  // ── Revenue chart ─────────────────────────────────────────────────────────────
+  function renderRevenueChart(daily: any[]) {
+    if (revenueChart) { revenueChart.destroy(); revenueChart = null; }
+
+    if (!daily || daily.length === 0) {
+      chartContainer.classList.add('hidden');
+      return;
+    }
+
+    chartContainer.classList.remove('hidden');
+    chartSubtitle.textContent = `${daily.length} día${daily.length !== 1 ? 's' : ''} · ${fmtDate(daily[0].date)}${daily.length > 1 ? ' → ' + fmtDate(daily[daily.length - 1].date) : ''}`;
+
+    const labels = daily.map((d: any) => fmtDate(d.date));
+    const data   = daily.map((d: any) => d.revenue);
+
+    const isLine = chartType === 'line';
+    const accent = 'rgba(99,102,241,';
+
+    revenueChart = new Chart(revenueCanvas, {
+      type: chartType,
+      data: {
+        labels,
+        datasets: [{
+          label: 'Ingresos (€)',
+          data,
+          ...(isLine ? {
+            borderColor: 'rgb(99,102,241)',
+            backgroundColor: 'rgba(99,102,241,0.15)',
+            borderWidth: 2.5,
+            pointBackgroundColor: 'rgb(99,102,241)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: daily.length <= 7 ? 5 : 3,
+            tension: 0.35,
+            fill: true,
+          } : {
+            backgroundColor: (ctx: any) => {
+              const chart = ctx.chart;
+              const { chartArea, ctx: c } = chart;
+              if (!chartArea) return accent + '0.75)';
+              const gradient = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+              gradient.addColorStop(0, accent + '0.5)');
+              gradient.addColorStop(1, accent + '0.95)');
+              return gradient;
+            },
+            borderColor: 'rgb(99,102,241)',
+            borderWidth: 1,
+            borderRadius: 8,
+            borderSkipped: false,
+            maxBarThickness: 48,
+          }),
+        }],
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 400 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17,24,39,0.95)',
+            borderColor: 'rgba(99,102,241,0.4)',
+            borderWidth: 1,
+            padding: 12,
+            titleColor: 'rgba(255,255,255,0.5)',
+            bodyColor: '#fff',
+            bodyFont: { weight: 'bold', size: 14 },
+            callbacks: {
+              label: (ctx) => ` ${fmtEur(ctx.raw as number)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: DARK_GRID },
+            ticks: { color: DARK_TICK, maxRotation: 0 },
+            border: { color: 'transparent' },
+          },
+          y: {
+            grid: { color: DARK_GRID },
+            ticks: {
+              color: DARK_TICK,
+              callback: (v) => fmtEur(v as number),
+            },
+            border: { color: 'transparent' },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  // ── Donut chart ───────────────────────────────────────────────────────────────
+  function renderDonutChart(products: any[]) {
+    if (donutChart) { donutChart.destroy(); donutChart = null; }
+    donutLegend.innerHTML = '';
+
+    if (!products || products.length === 0) {
+      donutContainer.classList.add('hidden');
+      return;
+    }
+
+    donutContainer.classList.remove('hidden');
+
+    const sorted  = [...products].sort((a, b) => b.total - a.total);
+    const top5    = sorted.slice(0, 5);
+    const others  = sorted.slice(5);
+    const otherTotal = others.reduce((s, p) => s + Number(p.total), 0);
+
+    const labels = top5.map(p => p.name);
+    const data   = top5.map(p => Number(p.total));
+    const colors = top5.map((_, i) => PALETTE[i].bg);
+    const borders = top5.map((_, i) => PALETTE[i].border);
+
+    if (otherTotal > 0) {
+      labels.push('Otros');
+      data.push(otherTotal);
+      colors.push(PALETTE[5].bg);
+      borders.push(PALETTE[5].border);
+    }
+
+    const grandTotal = data.reduce((s, v) => s + v, 0);
+    donutCenterValue.textContent = fmtEur(grandTotal);
+
+    donutChart = new Chart(donutCanvas, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors,
+          borderColor: borders,
+          borderWidth: 1.5,
+          hoverBorderWidth: 2.5,
+          hoverOffset: 6,
+        }],
+      },
+      options: {
+        responsive: false,
+        cutout: '68%',
+        animation: { duration: 400 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17,24,39,0.95)',
+            borderColor: 'rgba(99,102,241,0.4)',
+            borderWidth: 1,
+            padding: 12,
+            titleColor: 'rgba(255,255,255,0.5)',
+            bodyColor: '#fff',
+            bodyFont: { weight: 'bold', size: 13 },
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.raw as number;
+                const pct = ((val / grandTotal) * 100).toFixed(1);
+                return ` ${fmtEur(val)} (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Custom legend
+    labels.forEach((label, i) => {
+      const pct = ((data[i] / grandTotal) * 100).toFixed(1);
+      const color = PALETTE[Math.min(i, 5)].text;
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between gap-2 text-xs';
+      row.innerHTML = `
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full shrink-0" style="background:${borders[i]}"></span>
+          <span class="text-tpv-text-muted truncate">${label}</span>
+        </div>
+        <span class="font-mono font-black shrink-0" style="color:${color}">${fmtEur(data[i])}</span>
+      `;
+      donutLegend.appendChild(row);
+    });
+  }
+
+  // ── Products table ────────────────────────────────────────────────────────────
+  let tableData: any[] = [];
+
+  function renderTable() {
+    if (!tableData.length) return;
+
+    const maxTotal = Math.max(...tableData.map(p => Number(p.total)));
+    const sorted = [...tableData].sort((a, b) => {
+      const va = sortKey === 'name' ? a.name : sortKey === 'quantity' ? a.quantity : Number(a.total);
+      const vb = sortKey === 'name' ? b.name : sortKey === 'quantity' ? b.quantity : Number(b.total);
+      if (typeof va === 'string') return sortDir * va.localeCompare(vb as string);
+      return sortDir * ((va as number) - (vb as number));
+    });
+
+    tableCount.textContent = `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`;
+
+    tbody.innerHTML = sorted.map((p: any, i: number) => {
+      const pct = Math.max(2, (Number(p.total) / maxTotal) * 100);
+      const isTop = i === 0 && sortKey === 'total' && sortDir === -1;
+      return `
+        <tr class="hover:bg-tpv-bg/40 transition-colors">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              ${isTop ? '<span class="w-5 h-5 bg-tpv-accent/20 text-tpv-accent rounded-md flex items-center justify-center text-[9px] font-black shrink-0">#1</span>' : ''}
+              <span class="font-bold text-tpv-text">${p.name}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-center font-mono text-tpv-text-muted font-bold">${p.quantity}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end gap-3">
+              <div class="h-1.5 rounded-full bg-tpv-border overflow-hidden w-24 shrink-0">
+                <div class="h-full bg-tpv-accent rounded-full transition-all" style="width:${pct}%"></div>
+              </div>
+              <span class="font-mono font-black text-tpv-accent w-20 text-right">${fmtEur(Number(p.total))}</span>
+            </div>
+          </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="3" class="px-6 py-8 text-center text-tpv-text-muted text-sm">Sin ventas en este período</td></tr>';
+
+    // Update sort icons
+    document.querySelectorAll<HTMLElement>('[data-sort]').forEach(th => {
+      const icon = th.querySelector('.sort-icon') as HTMLElement;
+      if (th.dataset.sort === sortKey) {
+        icon.textContent = sortDir === 1 ? ' ↑' : ' ↓';
+        icon.classList.remove('opacity-30');
+        icon.classList.add('opacity-100', 'text-tpv-accent');
+      } else {
+        icon.textContent = ' ↕';
+        icon.classList.add('opacity-30');
+        icon.classList.remove('opacity-100', 'text-tpv-accent');
+      }
+    });
+  }
+
+  // ── Load report ───────────────────────────────────────────────────────────────
+  async function loadReport(from: string, to: string) {
+    currentFrom = from;
+    currentTo   = to;
+
+    const endpoint = from === to
+      ? `/api/reports/daily?date=${from}`
+      : `/api/reports/range?from=${from}&to=${to}`;
+
+    try {
+      const res = await fetch(endpoint, {
+        headers: { Authorization: `Bearer ${token()}`, Accept: 'application/json' },
+      });
+      reportData = await res.json();
+    } catch {
+      return;
+    }
+
+    // KPI cards
+    document.getElementById('stat-revenue')!.textContent = fmtEur(reportData.revenue);
+    document.getElementById('stat-orders')!.textContent  = String(reportData.order_count);
+    document.getElementById('stat-avg')!.textContent     = fmtEur(reportData.avg_ticket);
+
+    // Period label
+    if (from === to) {
+      periodLabel.textContent = `Datos de ${fmtDate(from)}`;
+    } else {
+      periodLabel.textContent = `${fmtDate(from)} → ${fmtDate(to)} · ${Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86400000) + 1} días`;
+    }
+
+    // Revenue chart — for single day use a synthetic daily array
+    const daily = reportData.daily ?? (from === to ? [{ date: from, revenue: reportData.revenue, orders: reportData.order_count }] : []);
+    renderRevenueChart(daily);
+
+    // Donut
+    renderDonutChart(reportData.products ?? []);
+
+    // Table
+    tableData = reportData.products ?? [];
+    sortKey = 'total';
+    sortDir = -1;
+    renderTable();
+  }
+
+  // ── Filter buttons ────────────────────────────────────────────────────────────
+  function setActiveRange(range: string) {
+    document.querySelectorAll('.range-btn').forEach(btn => {
+      btn.classList.remove('bg-tpv-accent', 'border-tpv-accent', 'text-white');
+      btn.classList.add('border-tpv-border', 'text-tpv-text-muted');
+    });
+    const active = document.querySelector(`[data-range="${range}"]`);
+    if (active) {
+      active.classList.add('bg-tpv-accent', 'border-tpv-accent', 'text-white');
+      active.classList.remove('border-tpv-border', 'text-tpv-text-muted');
+    }
+    const customDates = document.getElementById('custom-dates')!;
+    customDates.classList.toggle('hidden', range !== 'custom');
+  }
+
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const range = btn.getAttribute('data-range')!;
+      setActiveRange(range);
+      if (range === 'custom') return;
+      const t = today();
+      if (range === 'today') loadReport(t, t);
+      else if (range === 'week')  loadReport(startOfWeek(), t);
+      else if (range === 'month') loadReport(startOfMonth(), t);
+    });
+  });
+
+  const dateFrom = document.getElementById('date-from') as HTMLInputElement;
+  const dateTo   = document.getElementById('date-to') as HTMLInputElement;
+  dateFrom.value = today();
+  dateTo.value   = today();
+
+  function onCustomChange() {
+    if (dateFrom.value && dateTo.value && dateFrom.value <= dateTo.value) {
+      loadReport(dateFrom.value, dateTo.value);
+    }
+  }
+  dateFrom.addEventListener('change', onCustomChange);
+  dateTo.addEventListener('change', onCustomChange);
+
+  // ── Chart type toggle ─────────────────────────────────────────────────────────
+  document.getElementById('chart-bar-btn')!.addEventListener('click', () => {
+    chartType = 'bar';
+    document.getElementById('chart-bar-btn')!.classList.add('bg-tpv-accent', 'text-white');
+    document.getElementById('chart-bar-btn')!.classList.remove('text-tpv-text-muted');
+    document.getElementById('chart-line-btn')!.classList.remove('bg-tpv-accent', 'text-white');
+    document.getElementById('chart-line-btn')!.classList.add('text-tpv-text-muted');
+    if (reportData?.daily) renderRevenueChart(reportData.daily ?? [{ date: currentFrom, revenue: reportData.revenue, orders: reportData.order_count }]);
+  });
+
+  document.getElementById('chart-line-btn')!.addEventListener('click', () => {
+    chartType = 'line';
+    document.getElementById('chart-line-btn')!.classList.add('bg-tpv-accent', 'text-white');
+    document.getElementById('chart-line-btn')!.classList.remove('text-tpv-text-muted');
+    document.getElementById('chart-bar-btn')!.classList.remove('bg-tpv-accent', 'text-white');
+    document.getElementById('chart-bar-btn')!.classList.add('text-tpv-text-muted');
+    if (reportData?.daily) renderRevenueChart(reportData.daily ?? [{ date: currentFrom, revenue: reportData.revenue, orders: reportData.order_count }]);
+  });
+
+  // ── Table sort ────────────────────────────────────────────────────────────────
+  document.querySelectorAll<HTMLElement>('[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort as typeof sortKey;
+      if (sortKey === key) {
+        sortDir = sortDir === 1 ? -1 : 1;
+      } else {
+        sortKey = key;
+        sortDir = key === 'name' ? 1 : -1;
+      }
+      renderTable();
+    });
+  });
+
+  // ── Exports ───────────────────────────────────────────────────────────────────
+  document.getElementById('export-excel-btn')?.addEventListener('click', () => {
+    if (!reportData) return;
+    const label = currentFrom === currentTo ? currentFrom : `${currentFrom}_${currentTo}`;
+    const rows = reportData.products.map((p: any) => ({
+      Producto: p.name,
+      Unidades: p.quantity,
+      'Total (€)': Number(p.total).toFixed(2),
+    }));
+    rows.push({ Producto: 'TOTAL', Unidades: '', 'Total (€)': reportData.revenue.toFixed(2) });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+    XLSX.writeFile(wb, `ventas_${label}.xlsx`);
+  });
+
+  document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
+    if (!reportData) return;
+    const label = currentFrom === currentTo ? currentFrom : `${currentFrom} → ${currentTo}`;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text(`Informe de Ventas — ${label}`, 14, 20);
+    doc.setFontSize(11);
+    doc.text(`Ingresos: ${fmtEur(reportData.revenue)}   Pedidos: ${reportData.order_count}   Ticket medio: ${fmtEur(reportData.avg_ticket)}`, 14, 30);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['Producto', 'Unidades', 'Total (€)']],
+      body: [
+        ...reportData.products.map((p: any) => [p.name, p.quantity, Number(p.total).toFixed(2)]),
+        [{ content: 'TOTAL', styles: { fontStyle: 'bold' } }, '', { content: reportData.revenue.toFixed(2), styles: { fontStyle: 'bold' } }],
+      ],
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+
+    doc.save(`ventas_${label.replace(' → ', '_')}.pdf`);
+  });
+
+  // ── Boot ──────────────────────────────────────────────────────────────────────
+  loadReport(today(), today());
+</script>

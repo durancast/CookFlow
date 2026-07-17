@@ -1,0 +1,161 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const canEdit = role === 'admin';
+---
+
+<AdminLayout title="Categorías">
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-tpv-text tracking-tight">Categorías</h1>
+      <p class="text-tpv-text-muted mt-1">Gestiona las categorías del menú</p>
+    </div>
+    {canEdit && (
+      <button id="open-modal-btn" class="bg-tpv-accent hover:bg-tpv-accent-hover text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M12 4v16m8-8H4" /></svg>
+        Nueva Categoría
+      </button>
+    )}
+  </header>
+
+  <div class="bg-tpv-surface border border-tpv-border rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-tpv-bg/50 border-b border-tpv-border">
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Nombre</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Slug</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="categories-tbody" class="divide-y divide-tpv-border"></tbody>
+    </table>
+  </div>
+
+  {canEdit && (
+    <div id="cat-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-tpv-bg/80 backdrop-blur-sm">
+      <div class="bg-tpv-surface w-full max-w-sm rounded-3xl shadow-2xl p-6 border border-tpv-border">
+        <h2 id="modal-title" class="text-2xl font-bold text-tpv-text mb-6">Nueva Categoría</h2>
+        <form id="cat-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase">Nombre</label>
+            <input type="text" name="name" required
+              class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-tpv-accent">
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button type="button" id="close-modal-btn" class="flex-1 bg-tpv-bg text-tpv-text p-4 rounded-xl font-bold">Cancelar</button>
+            <button type="submit" class="flex-1 bg-tpv-accent text-white p-4 rounded-xl font-bold shadow-lg">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )}
+</AdminLayout>
+
+<script define:vars={{ canEdit }}>
+  const modal = document.getElementById('cat-modal');
+  const form = document.getElementById('cat-form');
+  const tbody = document.getElementById('categories-tbody');
+
+  let editingId = null;
+
+  function slugify(name) {
+    return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+
+  function openModal(cat) {
+    if (!form || !modal) return;
+    editingId = cat?.id ?? null;
+    form.reset();
+    if (cat) form.elements.namedItem('name').value = cat.name;
+    document.getElementById('modal-title').textContent = cat ? 'Editar Categoría' : 'Nueva Categoría';
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+    editingId = null;
+  }
+
+  async function load() {
+    let cats;
+    try {
+      const res = await fetch('/api/categories', { headers: { Accept: 'application/json' } });
+      cats = await res.json();
+    } catch (e) {
+      window.showToast?.('Error al cargar categorías', 'error');
+      return;
+    }
+    tbody.innerHTML = cats.map((c) => {
+      const canDelete = c.products_count === 0;
+      const deleteBtn = canEdit
+        ? `<button class="delete-btn font-bold ${canDelete ? 'text-red-400' : 'text-tpv-text-muted cursor-not-allowed'}"
+            data-id="${c.id}" data-count="${c.products_count}"
+            ${!canDelete ? 'title="Tiene productos asociados"' : ''}>Borrar</button>`
+        : '';
+      return `
+        <tr class="hover:bg-tpv-bg/40 transition-all border-b border-tpv-border/50">
+          <td class="p-4 font-bold text-tpv-text">${c.name}</td>
+          <td class="p-4 font-mono text-xs text-tpv-text-muted">${c.slug}</td>
+          <td class="p-4 text-right space-x-2">
+            ${canEdit ? `<button class="edit-btn text-tpv-accent font-bold" data-id="${c.id}" data-name="${c.name}">Editar</button>` : ''}
+            ${deleteBtn}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const el = e.currentTarget;
+        openModal({ id: Number(el.dataset.id), name: el.dataset.name });
+      });
+    });
+
+    tbody.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        const el = e.currentTarget;
+        if (Number(el.dataset.count) > 0) {
+          window.showToast?.(`No se puede borrar: tiene ${el.dataset.count} producto(s) asociado(s)`, 'error');
+          return;
+        }
+        if (!confirm('¿Eliminar categoría?')) return;
+        const res = await fetch(`/api/categories/${el.dataset.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}`, Accept: 'application/json' },
+        });
+        if (res.ok) {
+          window.showToast?.('Categoría eliminada', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          window.showToast?.(err.message || 'Error al eliminar', 'error');
+        }
+        load();
+      });
+    });
+  }
+
+  form?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = form.elements.namedItem('name').value.trim();
+    const body = { name, slug: slugify(name) };
+    const url = editingId ? `/api/categories/${editingId}` : '/api/categories';
+    const method = editingId ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}`, Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) { closeModal(); load(); }
+    else { window.showToast?.('Error al guardar', 'error'); }
+  });
+
+  document.getElementById('open-modal-btn')?.addEventListener('click', () => openModal());
+  document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+
+  load();
+</script>

@@ -1,0 +1,243 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const canEdit = role === 'admin';
+---
+
+<AdminLayout title="Gestión de Productos">
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-tpv-text font-sans tracking-tight">Catálogo de Productos</h1>
+      <p class="text-tpv-text-muted mt-1">Gestiona los platos y bebidas del restaurante</p>
+    </div>
+
+    {canEdit && (
+      <button id="open-modal-btn" class="bg-tpv-accent hover:bg-tpv-accent-hover text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M12 4v16m8-8H4" /></svg>
+        Añadir Producto
+      </button>
+    )}
+  </header>
+
+  <div class="bg-tpv-surface border border-tpv-border rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-tpv-bg/50 border-b border-tpv-border">
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Imagen</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Nombre</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Categoría</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted">Precio</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-center">Disponible</th>
+          <th class="p-4 font-bold text-xs uppercase tracking-widest text-tpv-text-muted text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="products-table-body" class="divide-y divide-tpv-border">
+      </tbody>
+    </table>
+  </div>
+
+  {canEdit && (
+    <div id="product-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-tpv-bg/80 backdrop-blur-sm">
+      <div class="bg-tpv-surface w-full max-w-md rounded-3xl shadow-2xl p-6 border border-tpv-border">
+        <h2 id="modal-title" class="text-2xl font-bold text-tpv-text mb-6">Nuevo Producto</h2>
+
+        <form id="add-product-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase">Nombre del plato</label>
+            <input type="text" name="name" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-tpv-accent">
+          </div>
+
+          <div class="flex gap-4">
+            <div class="w-1/2">
+              <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase">Precio (€)</label>
+              <input type="number" step="0.01" name="price" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+            </div>
+            <div class="w-1/2">
+              <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase">Categoría</label>
+              <select id="category-select" name="category_id" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-xl px-4 py-2.5 outline-none">
+                <option value="">Cargando...</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-tpv-text-muted mb-1.5 uppercase">Imagen</label>
+            <input type="file" name="image" accept="image/*" class="w-full text-sm text-tpv-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-tpv-accent file:text-white cursor-pointer">
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button type="button" id="close-modal-btn" class="flex-1 bg-tpv-bg text-tpv-text p-4 rounded-xl font-bold">Cancelar</button>
+            <button type="submit" class="flex-1 bg-tpv-accent text-white p-4 rounded-xl font-bold shadow-lg">
+              <span id="btn-text-product">Guardar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )}
+</AdminLayout>
+
+<script define:vars={{ canEdit }}>
+  let isEditing = false;
+  let currentProductId = null;
+
+  const modal = document.getElementById('product-modal');
+  const form = document.getElementById('add-product-form');
+  const tbody = document.getElementById('products-table-body');
+
+  async function loadCategories() {
+    const res = await fetch('/api/categories', { headers: { 'Accept': 'application/json' } });
+    const cats = await res.json();
+    const sel = document.getElementById('category-select');
+    if (sel) sel.innerHTML = cats.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  function toggleModal(show, editMode = false) {
+    if (!modal || !form) return;
+    modal.classList.toggle('hidden', !show);
+    modal.style.display = show ? 'flex' : 'none';
+    if (!show) {
+      form.reset();
+      isEditing = false;
+      currentProductId = null;
+    }
+  }
+
+  async function loadAdminProducts() {
+    if (!tbody) return;
+    try {
+      const response = await fetch("/api/products", { headers: { 'Accept': 'application/json' } });
+      const products = await response.json();
+
+      if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-tpv-text-muted font-bold uppercase tracking-widest text-sm">Sin productos. Añade el primero.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = products.map((product) => {
+        const imageUrl = product.image
+          ? `/storage/products/${product.image}`
+          : 'https://placehold.co/100x100?text=Sin+Foto';
+        const available = product.available !== false;
+        const deleteBtn = canEdit
+          ? `<button class="delete-btn text-red-400 font-bold" data-id="${product.id}">Borrar</button>`
+          : '';
+        return `
+          <tr class="hover:bg-tpv-bg/40 transition-all border-b border-tpv-border/50">
+            <td class="p-4"><img src="${imageUrl}" class="w-12 h-12 rounded-lg object-cover bg-tpv-bg"></td>
+            <td class="p-4 font-bold text-tpv-text">${product.name}</td>
+            <td class="p-4 text-xs uppercase font-black text-tpv-text-muted">${product.category?.name || 'S/C'}</td>
+            <td class="p-4 font-mono font-black text-tpv-accent">${Number(product.price).toFixed(2)}€</td>
+            <td class="p-4 text-center">
+              <button class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${available ? 'bg-tpv-accent' : 'bg-tpv-border'}"
+                data-id="${product.id}" data-available="${available}">
+                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${available ? 'translate-x-6' : 'translate-x-1'}"></span>
+              </button>
+            </td>
+            <td class="p-4 text-right space-x-2">
+              ${canEdit ? `<button class="edit-btn text-tpv-accent font-bold"
+                data-id="${product.id}"
+                data-name="${product.name}"
+                data-price="${product.price}"
+                data-category="${product.category_id}">Editar</button>` : ''}
+              ${deleteBtn}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      attachListeners();
+    } catch (e) {
+      window.showToast?.('Error al cargar productos', 'error');
+    }
+  }
+
+  function attachListeners() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        const res = await fetch(`/api/products/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (res.ok) {
+          window.showToast?.('Producto eliminado', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          window.showToast?.(err.message || 'Error al eliminar', 'error');
+        }
+        loadAdminProducts();
+      });
+    });
+
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const el = e.currentTarget;
+        const id = el.dataset.id;
+        const current = el.dataset.available === 'true';
+        const newVal = !current;
+        await fetch(`/api/products/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ available: newVal }),
+        });
+        el.dataset.available = String(newVal);
+        el.classList.toggle('bg-tpv-accent', newVal);
+        el.classList.toggle('bg-tpv-border', !newVal);
+        const dot = el.querySelector('span');
+        dot.classList.toggle('translate-x-6', newVal);
+        dot.classList.toggle('translate-x-1', !newVal);
+      });
+    });
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (!form) return;
+        const t = e.currentTarget;
+        isEditing = true;
+        currentProductId = t.dataset.id || null;
+        form.elements.namedItem('name').value = t.dataset.name || '';
+        form.elements.namedItem('price').value = t.dataset.price || '';
+        form.elements.namedItem('category_id').value = t.dataset.category || '';
+        toggleModal(true, true);
+        document.getElementById('modal-title').textContent = "Editar Producto";
+      });
+    });
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const token = localStorage.getItem('auth_token');
+    if (isEditing) formData.append('_method', 'PUT');
+    const url = isEditing ? `/api/products/${currentProductId}` : `/api/products`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+      body: formData
+    });
+    if (res.ok) {
+      toggleModal(false);
+      loadAdminProducts();
+    } else {
+      window.showToast?.('Error al guardar el producto', 'error');
+    }
+  });
+
+  document.getElementById('open-modal-btn')?.addEventListener('click', () => {
+    document.getElementById('modal-title').textContent = "Nuevo Producto";
+    toggleModal(true);
+  });
+  document.getElementById('close-modal-btn')?.addEventListener('click', () => toggleModal(false));
+
+  if (canEdit) loadCategories();
+  loadAdminProducts();
+</script>

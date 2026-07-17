@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import KitchenDisplay from '../../components/react/KitchenDisplay.jsx';
+
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const readonly = role === 'waiter';
+---
+
+<Layout title="Cocina — CookFlow">
+  <div class="flex flex-col h-screen overflow-hidden bg-tpv-bg font-sans">
+
+    <header class="shrink-0 px-6 py-4 border-b border-tpv-border bg-tpv-surface flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-tpv-accent rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg shadow-tpv-accent/30">
+          CF
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-tpv-text tracking-tight">Cocina</h1>
+          <p class="text-[10px] font-black uppercase tracking-widest text-tpv-text-muted">Vista de cocina · Auto-refresco 10s</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 text-tpv-text-muted text-xs font-bold">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block"></span>
+          EN VIVO
+        </div>
+        <a
+          href="/tpv"
+          class="px-4 py-2 rounded-xl border border-tpv-border text-tpv-text-muted hover:text-tpv-text hover:border-tpv-accent transition-all text-xs font-black uppercase tracking-widest"
+        >
+          ← TPV
+        </a>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-hidden">
+      <KitchenDisplay client:only="react" readonly={readonly} />
+    </main>
+
+  </div>
+</Layout>

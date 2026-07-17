@@ -1,0 +1,209 @@
+---
+interface Props {
+  title: string;
+}
+
+import "../styles/global.css";
+const { title } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+
+// Función para comprobar si una ruta está activa
+const isActive = (path: string) => {
+  if (path === "/admin") {
+    return currentPath === "/admin" || currentPath === "/admin/";
+  }
+  return currentPath.startsWith(path);
+};
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Panel de Administración</title>
+
+    <script is:inline>
+      // Fallback client-side guard — middleware is the primary enforcement
+      function _getCookie(name) {
+        const m = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]+)');
+        return m ? decodeURIComponent(m[1]) : null;
+      }
+      const token = localStorage.getItem("auth_token") || _getCookie("auth_token");
+      const role  = localStorage.getItem("user_role")  || _getCookie("user_role");
+
+      if (!token || !["admin", "manager"].includes(role)) {
+        window.location.replace("/");
+      }
+
+      // Sync to localStorage so subsequent client fetches can read the token
+      if (token && !localStorage.getItem("auth_token")) {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", role);
+      }
+    </script>
+  </head>
+  <body class="bg-tpv-bg text-tpv-text h-screen flex overflow-hidden font-sans">
+    
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
+
+    <aside class="w-64 bg-tpv-surface border-r border-tpv-border flex flex-col h-full shrink-0">
+      <div class="p-6 border-b border-tpv-border">
+        <h2 class="text-2xl font-black text-transparent bg-clip-text bg-linear-to-r from-tpv-accent to-blue-400">
+          CookFlow
+        </h2>
+        <p class="text-xs text-tpv-text-muted font-bold tracking-widest uppercase mt-1">
+          Backoffice
+        </p>
+      </div>
+
+      <nav class="flex-1 p-4 space-y-2">
+        <a href="/admin" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin") && !currentPath.includes("/admin/") // Solo si es exacto /admin
+            || currentPath === "/admin"
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span class="font-bold text-sm">Panel</span>
+        </a>
+
+        <a href="/admin/productos" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/productos")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span class="font-bold text-sm">Productos</span>
+        </a>
+
+        <a href="/admin/mesas" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/mesas")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          <span class="font-bold text-sm">Mesas</span>
+        </a>
+
+        <a href="/admin/empleados" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/empleados")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span class="font-bold text-sm">Empleados</span>
+        </a>
+
+        <a href="/admin/categorias" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/categorias")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <span class="font-bold text-sm">Categorías</span>
+        </a>
+
+        <a href="/admin/ventas" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/admin/ventas")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span class="font-bold text-sm">Ventas</span>
+        </a>
+
+        <a href="/cocina" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive("/cocina")
+              ? "bg-tpv-accent text-white shadow-lg shadow-tpv-accent/20"
+              : "text-tpv-text-muted hover:bg-tpv-bg/50 hover:text-tpv-text"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+          </svg>
+          <span class="font-bold text-sm">Cocina</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-tpv-border">
+        <button id="logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto bg-tpv-bg p-8 custom-scrollbar">
+      <slot />
+    </main>
+
+    <script is:inline>
+      // Función global para mostrar notificaciones
+      window.showToast = (message, type = "success") => {
+        const container = document.getElementById("toast-container");
+        if (!container) return;
+        const toast = document.createElement("div");
+        const bgColor = type === "success" ? "bg-tpv-accent" : "bg-red-500";
+        const icon = type === "success" ? "✅" : "❌";
+        
+        toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10 font-bold transition-all duration-300 transform translate-y-4 opacity-0`;
+        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.remove("translate-y-4", "opacity-0"), 10);
+        
+        setTimeout(() => {
+          toast.classList.add("opacity-0", "translate-y-2");
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      };
+    </script>
+
+    <script>
+      const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+
+      document.getElementById("logout-btn")?.addEventListener("click", async () => {
+        const token = localStorage.getItem("auth_token");
+        
+        if (token) {
+          try {
+            await fetch(`${backendUrl}/api/logout`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
+            });
+          } catch (e) {}
+        }
+
+        localStorage.clear();
+        document.cookie = 'auth_token=; path=/; Max-Age=0';
+        document.cookie = 'user_role=; path=/; Max-Age=0';
+        window.location.href = "/";
+      });
+    </script>
+  </body>
+</html>

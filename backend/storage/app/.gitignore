@@ -1,4 +1,6 @@
 *
-!private/
-!public/
 !.gitignore
+!public/
+!public/products/
+!public/products/*.webp
+!public/products/*.jpg

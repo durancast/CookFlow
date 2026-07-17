@@ -9,6 +9,24 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.17.1"
+    "@astrojs/node": "^10.0.6",
+    "@astrojs/react": "^5.0.4",
+    "@nanostores/react": "^1.1.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.1.10",
+    "chart.js": "^4.5.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "nanostores": "^1.2.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "npm": "cabrones-usad-pnpm",
+    "pnpm": ">=9.0.0"
   }
 }

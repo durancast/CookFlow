@@ -1,0 +1,118 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+const role = Astro.cookies.get('user_role')?.value ?? '';
+const canEdit = role === 'admin';
+---
+
+<AdminLayout title="Gestión de Empleados">
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-tpv-text tracking-tight">Personal</h1>
+      <p class="text-tpv-text-muted mt-1 font-medium">Gestiona los accesos de tu equipo</p>
+    </div>
+    {canEdit && (
+      <button id="open-modal-btn" class="bg-tpv-accent text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+        Añadir Empleado
+      </button>
+    )}
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="employees-grid"></div>
+
+  <div id="employee-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-tpv-bg/80 backdrop-blur-sm">
+    <div class="bg-tpv-surface w-full max-w-sm rounded-3xl p-6 border border-tpv-border">
+      <h2 class="text-2xl font-bold mb-6">Nuevo Empleado</h2>
+      <form id="employee-form" class="space-y-4">
+        <input type="text" name="name" required placeholder="Nombre Completo" class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
+        <select name="role" required class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
+          <option value="waiter">Camarero</option>
+          <option value="cook">Cocinero</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Administrador</option>
+        </select>
+        <input type="password" name="password" required placeholder="Contraseña" class="w-full bg-tpv-bg p-3 rounded-xl border border-tpv-border text-tpv-text">
+        <div class="flex gap-2 mt-4">
+          <button type="button" id="close-modal" class="flex-1 p-3 bg-tpv-bg rounded-xl">Cancelar</button>
+          <button type="submit" class="flex-1 bg-tpv-accent text-white p-3 rounded-xl font-bold">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  const canEdit = document.cookie.match(/user_role=([^;]+)/)?.[1] === 'admin';
+  const grid = document.getElementById('employees-grid');
+  const modal = document.getElementById('employee-modal');
+  const form = document.getElementById('employee-form') as HTMLFormElement;
+
+  async function loadEmployees() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch("/api/users", {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+
+    if (res.status === 401) {
+      localStorage.clear();
+      window.location.replace('/');
+      return;
+    }
+
+    const users = await res.json();
+    if (!grid) return;
+
+    grid.innerHTML = users.map((u: any) => `
+      <div class="bg-tpv-surface border border-tpv-border rounded-3xl p-6 relative group">
+        <div class="w-12 h-12 rounded-2xl bg-tpv-bg flex items-center justify-center text-tpv-accent mb-4 font-black">
+          ${u.name ? u.name.charAt(0) : '?'}
+        </div>
+        <h3 class="text-xl font-black">${u.name}</h3>
+        <p class="text-[10px] uppercase text-tpv-accent font-black">${u.role}</p>
+        ${canEdit ? `<button onclick="deleteUser(${u.id})" class="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-all">Borrar</button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  (window as any).deleteUser = async (id: number) => {
+    if (!confirm('¿Eliminar empleado?')) return;
+    const token = localStorage.getItem('auth_token');
+    await fetch(`/api/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    loadEmployees();
+  };
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch("/api/users", {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(Object.fromEntries(fd))
+    });
+
+    if (res.ok) {
+      modal?.classList.add('hidden');
+      loadEmployees();
+    } else {
+      window.showToast?.('Error al crear empleado', 'error');
+    }
+  });
+
+  document.getElementById('open-modal-btn')?.addEventListener('click', () => {
+    modal?.classList.remove('hidden');
+    modal!.style.display = 'flex';
+  });
+  document.getElementById('close-modal')?.addEventListener('click', () => {
+    modal?.classList.add('hidden');
+    modal!.style.display = 'none';
+  });
+
+  loadEmployees();
+</script>

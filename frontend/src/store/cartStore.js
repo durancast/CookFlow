@@ -1,0 +1,74 @@
+import { atom } from 'nanostores';
+
+export const cartItems = atom([]);
+
+/** @type {import('nanostores').WritableAtom<{id: number, number: number} | null>} */
+export const selectedTable = atom(null);
+
+// ➕ Añadir producto
+export function addToCart(product, note = '') {
+    const productId = product.id;
+
+    if (!productId) return;
+
+    const currentItems = cartItems.get();
+    const existingItem = currentItems.find(item => (item.id || item.name) === productId);
+
+    if (existingItem && !existingItem.sent && !note) {
+        // Only increment quantity if the item hasn't been sent yet and no specific note
+        cartItems.set(currentItems.map(item =>
+            (item.id || item.name) === productId
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+        ));
+    } else {
+        // Sent items, new items, or items with a note always add as a new unsent line
+        cartItems.set([...currentItems, { ...product, quantity: 1, note, sent: false }]);
+    }
+}
+
+// ✅ Mark specific item ids as sent
+export function markItemsAsSent(ids) {
+    cartItems.set(cartItems.get().map(item =>
+        ids.includes(item.id) ? { ...item, sent: true } : item
+    ));
+}
+
+// ➖ Actualizar cantidad (+1 o -1)
+export function updateQuantity(productId, delta) {
+    const currentItems = cartItems.get();
+    
+    const updatedItems = currentItems.map(item => {
+        if ((item.id || item.name) === productId) {
+            return { ...item, quantity: item.quantity + delta };
+        }
+        return item;
+    }).filter(item => item.quantity > 0); 
+
+    cartItems.set(updatedItems);
+}
+
+// 📝 Añadir nota
+export function addNoteToItem(productId, note) {
+    const currentItems = cartItems.get();
+    cartItems.set(currentItems.map(item => 
+        (item.id || item.name) === productId ? { ...item, note } : item
+    ));
+}
+
+// 🧹 Vaciar carrito
+export function clearCart() {
+    cartItems.set([]);
+}
+
+// 🗑️ Eliminar el producto de un solo clic
+export function removeFromCart(productId) {
+    const currentItems = cartItems.get();
+    cartItems.set(currentItems.filter(item => (item.id || item.name) !== productId));
+}
+
+// 🚀 NUEVO: Limpiar carrito Y salir de la mesa actual
+export function clearOrder() {
+    cartItems.set([]);
+    selectedTable.set(null);
+}

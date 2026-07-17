@@ -1,0 +1,358 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+const restaurantName = import.meta.env.PUBLIC_RESTAURANT_NAME || 'CookFlow';
+
+const tableId = Astro.url.searchParams.get('table');
+
+const menuRes = await fetch(`${backendUrl}/api/public/menu`);
+const categories = menuRes.ok ? await menuRes.json() : [];
+
+let tableNumber: number | null = null;
+if (tableId) {
+  try {
+    const tableRes = await fetch(`${backendUrl}/api/tables/${tableId}`);
+    if (tableRes.ok) {
+      const tableData = await tableRes.json();
+      tableNumber = tableData.number;
+    }
+  } catch (e) {}
+}
+---
+
+<Layout title={tableNumber ? `Mesa ${tableNumber} — ${restaurantName}` : `Carta — ${restaurantName}`}>
+  <div class="min-h-screen bg-tpv-bg font-sans overflow-y-auto">
+
+    <header class="sticky top-0 z-30 bg-tpv-bg/90 backdrop-blur-md border-b border-tpv-border px-5 py-4">
+      <div class="max-w-2xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-tpv-accent rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-tpv-accent/30">
+            CF
+          </div>
+          <div>
+            <p class="font-black text-tpv-text text-base leading-tight">{restaurantName}</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-tpv-text-muted">Carta Digital</p>
+          </div>
+        </div>
+        {tableNumber && (
+          <span class="bg-tpv-accent/10 text-tpv-accent border border-tpv-accent/30 text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+            Mesa {tableNumber}
+          </span>
+        )}
+      </div>
+    </header>
+
+    {categories.length === 0 ? (
+      <div class="flex flex-col items-center justify-center min-h-[60vh] text-tpv-text-muted text-center px-6">
+        <p class="text-xl font-black uppercase tracking-tighter">Carta no disponible</p>
+        <p class="text-sm mt-2 opacity-50">Consulta con el personal del local</p>
+      </div>
+    ) : (
+      <div class="max-w-2xl mx-auto px-4 pb-36">
+
+        <nav class="sticky top-[73px] z-20 bg-tpv-bg/90 backdrop-blur-md py-4">
+          <div class="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+            {categories.map((cat: any) => (
+              <a
+                href={`#cat-${cat.id}`}
+                class="shrink-0 px-4 py-2 rounded-xl border border-tpv-border text-tpv-text-muted text-xs font-black uppercase tracking-widest hover:border-tpv-accent hover:text-tpv-accent transition-all"
+              >
+                {cat.name}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        {categories.map((cat: any) => (
+          <section id={`cat-${cat.id}`} class="mb-10 scroll-mt-36">
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-tpv-text-muted mb-4 border-b border-tpv-border pb-3">
+              {cat.name}
+            </h2>
+            <div class="space-y-3">
+              {cat.products.map((product: any) => {
+                const imageUrl = product.image
+                  ? `/storage/products/${product.image}`
+                  : null;
+                return (
+                  <div
+                    class="flex items-center gap-4 bg-tpv-surface border border-tpv-border rounded-2xl p-4"
+                    data-product-id={product.id}
+                    data-product-name={product.name}
+                    data-product-price={product.price}
+                  >
+                    {imageUrl && (
+                      <div class="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-tpv-bg">
+                        <img
+                          src={imageUrl}
+                          alt={product.name}
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                          onerror="this.parentElement.style.display='none'"
+                        />
+                      </div>
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-tpv-text text-base leading-tight">{product.name}</p>
+                      {product.description && (
+                        <p class="text-tpv-text-muted text-xs mt-1 line-clamp-2 leading-relaxed">{product.description}</p>
+                      )}
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end gap-2">
+                      <span class="font-mono font-black text-tpv-accent text-lg">
+                        {parseFloat(product.price).toFixed(2)}€
+                      </span>
+                      {tableId && (
+                        <div class="product-controls flex items-center gap-1">
+                          <button
+                            class="btn-minus hidden w-7 h-7 rounded-lg bg-tpv-bg border border-tpv-border text-tpv-text font-black text-sm transition-all active:scale-90 hover:border-red-400 hover:text-red-400"
+                            aria-label="Quitar uno"
+                          >−</button>
+                          <span class="qty-badge hidden min-w-[1.5rem] text-center font-mono font-black text-sm text-tpv-text">0</span>
+                          <button
+                            class="btn-plus w-7 h-7 rounded-lg bg-tpv-accent text-white font-black text-sm transition-all active:scale-90 hover:bg-tpv-accent-hover shadow-sm shadow-tpv-accent/30"
+                            aria-label="Añadir uno"
+                          >+</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+
+      </div>
+    )}
+
+    {tableId && (
+      <>
+        <!-- Call waiter button (moves up when cart bar is visible) -->
+        <div id="call-waiter-wrap" class="fixed bottom-6 left-0 right-0 flex justify-center z-40 px-4 transition-all">
+          <button
+            id="call-waiter-btn"
+            data-table-id={tableId}
+            class="flex items-center gap-3 bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black px-8 py-4 rounded-2xl shadow-2xl shadow-tpv-accent/40 transition-all active:scale-95 border border-white/10 text-sm uppercase tracking-widest"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            Llamar al camarero
+          </button>
+        </div>
+
+        <!-- Cart bar -->
+        <div id="cart-bar" class="hidden fixed bottom-0 left-0 right-0 z-50 bg-tpv-surface border-t border-tpv-border px-4 py-3 shadow-2xl">
+          <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
+            <span id="cart-summary" class="font-bold text-tpv-text text-sm"></span>
+            <button id="btn-send-order"
+              class="shrink-0 bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black px-6 py-3 rounded-xl transition-all active:scale-95 text-sm uppercase tracking-widest shadow-lg shadow-tpv-accent/30">
+              Enviar pedido →
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm order modal -->
+        <div id="order-modal" class="hidden fixed inset-0 z-[100] flex items-end justify-center bg-tpv-bg/80 backdrop-blur-sm px-4 pb-4">
+          <div class="w-full max-w-2xl bg-tpv-surface border border-tpv-border rounded-3xl shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-200">
+            <h3 class="text-lg font-black text-tpv-text mb-1 uppercase tracking-tight">Confirmar pedido</h3>
+            <p id="order-modal-table" class="text-xs text-tpv-text-muted font-bold uppercase tracking-widest mb-4"></p>
+            <div id="order-modal-items" class="space-y-2 max-h-60 overflow-y-auto mb-4"></div>
+            <div class="flex gap-3 pt-2 border-t border-tpv-border">
+              <button id="order-modal-cancel"
+                class="flex-1 py-3 bg-tpv-bg text-tpv-text-muted border border-tpv-border rounded-xl font-black uppercase text-sm transition-all active:scale-95 hover:text-tpv-text">
+                Cancelar
+              </button>
+              <button id="order-modal-confirm"
+                class="flex-[2] py-3 bg-tpv-accent hover:bg-tpv-accent-hover text-white rounded-xl font-black uppercase text-sm shadow-lg shadow-tpv-accent/20 transition-all active:scale-95">
+                Confirmar
+              </button>
+            </div>
+            <p id="order-modal-error" class="hidden text-red-400 text-xs font-bold mt-3 text-center"></p>
+          </div>
+        </div>
+      </>
+    )}
+
+  </div>
+</Layout>
+
+<script define:vars={{ tableId, tableNumber }}>
+  // --- Call waiter ---
+  const callBtn = document.getElementById('call-waiter-btn');
+  if (callBtn) {
+    callBtn.addEventListener('click', async () => {
+      callBtn.disabled = true;
+      callBtn.textContent = 'Llamando...';
+      try {
+        const res = await fetch(`/api/tables/${tableId}/call-waiter`, { method: 'POST' });
+        if (res.ok) {
+          callBtn.textContent = '✓ Camarero avisado';
+          callBtn.classList.remove('bg-tpv-accent', 'hover:bg-tpv-accent-hover');
+          callBtn.classList.add('bg-green-500');
+          setTimeout(() => {
+            callBtn.disabled = false;
+            callBtn.classList.remove('bg-green-500');
+            callBtn.classList.add('bg-tpv-accent', 'hover:bg-tpv-accent-hover');
+            callBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> Llamar al camarero`;
+          }, 5000);
+        } else {
+          callBtn.textContent = 'Error — reintentar';
+          callBtn.disabled = false;
+        }
+      } catch (e) {
+        callBtn.textContent = 'Sin conexión';
+        callBtn.disabled = false;
+      }
+    });
+  }
+
+  if (!tableId) return;
+
+  // --- Cart state ---
+  const cart = {}; // { [productId]: { product: { id, name, price }, qty } }
+
+  const cartBar = document.getElementById('cart-bar');
+  const cartSummary = document.getElementById('cart-summary');
+  const callWaiterWrap = document.getElementById('call-waiter-wrap');
+
+  function updateCartUI() {
+    const entries = Object.values(cart).filter(e => e.qty > 0);
+    const totalItems = entries.reduce((s, e) => s + e.qty, 0);
+    const totalPrice = entries.reduce((s, e) => s + e.product.price * e.qty, 0);
+
+    if (totalItems > 0) {
+      cartBar.classList.remove('hidden');
+      cartSummary.textContent = `${totalItems} artículo${totalItems !== 1 ? 's' : ''} — ${totalPrice.toFixed(2)}€`;
+      callWaiterWrap.style.bottom = '68px';
+    } else {
+      cartBar.classList.add('hidden');
+      callWaiterWrap.style.bottom = '';
+    }
+  }
+
+  function setCardQty(card, productId, qty) {
+    const minusBtn = card.querySelector('.btn-minus');
+    const qtyBadge = card.querySelector('.qty-badge');
+
+    if (qty > 0) {
+      minusBtn.classList.remove('hidden');
+      qtyBadge.classList.remove('hidden');
+      qtyBadge.textContent = qty;
+    } else {
+      minusBtn.classList.add('hidden');
+      qtyBadge.classList.add('hidden');
+    }
+  }
+
+  document.querySelectorAll('[data-product-id]').forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    const productName = card.getAttribute('data-product-name');
+    const productPrice = parseFloat(card.getAttribute('data-product-price'));
+    const product = { id: productId, name: productName, price: productPrice };
+
+    const plusBtn = card.querySelector('.btn-plus');
+    const minusBtn = card.querySelector('.btn-minus');
+
+    if (!plusBtn) return;
+
+    plusBtn.addEventListener('click', () => {
+      if (!cart[productId]) cart[productId] = { product, qty: 0 };
+      cart[productId].qty++;
+      setCardQty(card, productId, cart[productId].qty);
+      updateCartUI();
+    });
+
+    minusBtn.addEventListener('click', () => {
+      if (!cart[productId] || cart[productId].qty === 0) return;
+      cart[productId].qty--;
+      setCardQty(card, productId, cart[productId].qty);
+      updateCartUI();
+    });
+  });
+
+  // --- Send order modal ---
+  const orderModal = document.getElementById('order-modal');
+  const orderModalItems = document.getElementById('order-modal-items');
+  const orderModalTable = document.getElementById('order-modal-table');
+  const orderModalError = document.getElementById('order-modal-error');
+  const orderModalConfirm = document.getElementById('order-modal-confirm');
+  const orderModalCancel = document.getElementById('order-modal-cancel');
+
+  document.getElementById('btn-send-order').addEventListener('click', () => {
+    const entries = Object.values(cart).filter(e => e.qty > 0);
+    const total = entries.reduce((s, e) => s + e.product.price * e.qty, 0);
+
+    orderModalTable.textContent = tableNumber ? `Mesa ${tableNumber}` : `Mesa ${tableId}`;
+    orderModalError.classList.add('hidden');
+    orderModalConfirm.disabled = false;
+    orderModalConfirm.textContent = 'Confirmar';
+
+    orderModalItems.innerHTML = entries.map(e => `
+      <div class="flex justify-between items-center py-1.5">
+        <span class="font-bold text-tpv-text text-sm">${e.qty}× ${e.product.name}</span>
+        <span class="font-mono text-tpv-accent font-black text-sm">${(e.product.price * e.qty).toFixed(2)}€</span>
+      </div>
+    `).join('') + `
+      <div class="flex justify-between items-center pt-2 mt-1 border-t border-tpv-border">
+        <span class="font-black text-tpv-text text-sm uppercase tracking-wide">Total</span>
+        <span class="font-mono text-tpv-accent font-black">${total.toFixed(2)}€</span>
+      </div>
+    `;
+
+    orderModal.classList.remove('hidden');
+  });
+
+  orderModalCancel.addEventListener('click', () => orderModal.classList.add('hidden'));
+
+  orderModalConfirm.addEventListener('click', async () => {
+    const entries = Object.values(cart).filter(e => e.qty > 0);
+    orderModalConfirm.disabled = true;
+    orderModalConfirm.textContent = 'Enviando...';
+    orderModalError.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table_id: parseInt(tableId),
+          items: entries.map(e => ({ product_id: parseInt(e.product.id), quantity: e.qty })),
+        }),
+      });
+
+      if (res.ok) {
+        orderModal.classList.add('hidden');
+        // Clear cart
+        Object.keys(cart).forEach(id => { cart[id].qty = 0; });
+        document.querySelectorAll('[data-product-id]').forEach(card => {
+          const id = card.getAttribute('data-product-id');
+          setCardQty(card, id, 0);
+        });
+        // Show success in cart bar area
+        cartBar.classList.remove('hidden');
+        cartBar.innerHTML = `
+          <div class="max-w-2xl mx-auto flex items-center justify-center gap-2 py-1">
+            <span class="text-green-400 font-black text-sm uppercase tracking-widest">✓ Pedido enviado — el equipo lo está preparando</span>
+          </div>`;
+        callWaiterWrap.style.bottom = '68px';
+        setTimeout(() => {
+          cartBar.classList.add('hidden');
+          callWaiterWrap.style.bottom = '';
+        }, 6000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        orderModalError.textContent = err.message || 'Error al enviar el pedido. Inténtalo de nuevo.';
+        orderModalError.classList.remove('hidden');
+        orderModalConfirm.disabled = false;
+        orderModalConfirm.textContent = 'Confirmar';
+      }
+    } catch (e) {
+      orderModalError.textContent = 'Sin conexión. Comprueba tu red e inténtalo de nuevo.';
+      orderModalError.classList.remove('hidden');
+      orderModalConfirm.disabled = false;
+      orderModalConfirm.textContent = 'Confirmar';
+    }
+  });
+</script>

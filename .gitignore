@@ -7,7 +7,6 @@ frontend/.astro/
 backend/vendor/
 backend/.env
 backend/storage/*.key
-backend/public/storage
 backend/public/hot
 
 # --- Sistema y Editores ---
@@ -15,3 +14,4 @@ backend/public/hot
 .vscode/
 .idea/
 Thumbs.db
+.env

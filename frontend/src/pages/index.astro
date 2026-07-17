@@ -1,11 +1,94 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Acceso - CookFlow">
+  <div class="min-h-screen bg-tpv-bg flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-10">
+        <h1 class="text-5xl font-black text-tpv-accent tracking-tighter mb-2 italic">CookFlow</h1>
+        <p class="text-tpv-text-muted font-bold uppercase tracking-[0.2em] text-xs">Acceso de Personal</p>
+      </div>
+
+      <div class="bg-tpv-surface border border-tpv-border p-8 rounded-3xl shadow-2xl">
+        <form id="login-form" class="space-y-6">
+          <div>
+            <label class="block text-xs font-black text-tpv-text-muted uppercase tracking-widest mb-3">¿Quién eres?</label>
+            <select id="user-select" required class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-tpv-accent appearance-none cursor-pointer font-bold">
+              <option value="" disabled selected>Cargando personal...</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-black text-tpv-text-muted uppercase tracking-widest mb-3">Contraseña</label>
+            <input type="password" id="password-input" required placeholder="••••" class="w-full bg-tpv-bg text-tpv-text border border-tpv-border rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-tpv-accent transition-all text-center tracking-[0.5em]"/>
+          </div>
+
+          <button type="submit" class="w-full bg-tpv-accent hover:bg-tpv-accent-hover text-white font-black py-5 rounded-2xl shadow-lg transition-all active:scale-[0.98]">
+            Entrar al Sistema
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 </Layout>
+
+<script>
+  const select = document.getElementById("user-select") as HTMLSelectElement;
+  const passwordInput = document.getElementById("password-input") as HTMLInputElement;
+
+  // 1. CARGAR LISTA (Usamos el Proxy /api)
+  async function loadUsers() {
+    try {
+      const res = await fetch("/api/users-list"); 
+      const users = await res.json();
+      select.innerHTML = '<option value="" disabled selected>Escoge tu nombre...</option>' +
+        users.map((u: any) => `<option value="${u.name}">${u.name}</option>`).join("");
+    } catch (e) {
+      select.innerHTML = '<option value="">Error al conectar con el servidor</option>';
+    }
+  }
+
+  // 2. LÓGICA DE LOGIN
+  document.getElementById("login-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = select.value;
+    const password = passwordInput.value;
+    const email = `${username.toLowerCase().replace(/\s+/g, "")}@cookflow.com`;
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const token = data.access_token || data.token || data.plainTextToken;
+        const role  = data.user.role as string;
+
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", role);
+
+        document.cookie = `auth_token=${token}; path=/; SameSite=Strict; Max-Age=86400`;
+        document.cookie = `user_role=${role}; path=/; SameSite=Strict; Max-Age=86400`;
+
+        const redirects: Record<string, string> = {
+          admin:   '/admin',
+          manager: '/admin',
+          waiter:  '/tpv',
+          cook:    '/cocina',
+        };
+        window.location.href = redirects[role] ?? '/tpv';
+      } else {
+        alert(data.message || "Error en el login");
+      }
+    } catch (error) {
+      alert("Error al conectar con el servidor");
+    }
+  });
+
+  loadUsers();
+</script>
