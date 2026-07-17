@@ -95,7 +95,7 @@ Para el Frontend se ha implementado una **Arquitectura de Islas**, utilizando As
 
 ## 👥 Equipo de Desarrollo
 
-* **Alejandro Durán** - *Tech Lead / Frontend Developer* (Definición de arquitectura, desarrollo integral del cliente y soporte en lógica Backend)
+* **Alejandro Durán** - *Tech Lead / Frontend Developer*
 * **Nizar** - *Backend & API Developer*
 * **Luis** - *Database & Data Modeling*
 
