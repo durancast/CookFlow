@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+
+logging:
+  level:
+    org.flywaydb: INFO
+    org.testcontainers: INFO

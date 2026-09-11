@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cookflow-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:cookflow}
+    username: ${DB_USER:cookflow}
+    password: ${DB_PASSWORD:cookflow}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    # Flyway es el dueño del esquema (enums nativos PG): Hibernate solo valida en tests.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+app:
+  jwt:
+    # Secreto (base64) de 256 bits. Sobrescribir en producción.
+    secret: ${JWT_SECRET:c2VjcmV0LXN1cGVyLXNlZ3Vyby1kZS1jb29rZmxvdy0xMjM0NTY3ODk=}
+    issuer: cookflow
+    expiration-seconds: 86400
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  default-flat-param-array: false
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.cookflow: DEBUG

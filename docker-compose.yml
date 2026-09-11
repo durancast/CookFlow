@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cookflow-postgres
+    environment:
+      POSTGRES_DB: cookflow
+      POSTGRES_USER: cookflow
+      POSTGRES_PASSWORD: cookflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - cookflow-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U cookflow -d cookflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend-spring
+      dockerfile: Dockerfile
+    container_name: cookflow-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cookflow
+      SPRING_DATASOURCE_USERNAME: cookflow
+      SPRING_DATASOURCE_PASSWORD: cookflow
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  cookflow-pgdata:
