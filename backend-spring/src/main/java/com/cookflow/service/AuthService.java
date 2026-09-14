@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class AuthService {
 
@@ -41,6 +43,18 @@ public class AuthService {
                 .map(u -> userRepository.findById(u.getId()).orElseThrow())
                 .orElseThrow(() -> new BusinessException("Usuario autenticado no encontrado"));
         return toUserResponse(user);
+    }
+
+    /**
+     * Listado de staff para el dropdown de login.
+     * Público por diseño: el login aún no tiene token.
+     * Siempre filtra por tenantId para no revelar usuarios de otros
+     * restaurantes.
+     */
+    public List<UserResponse> staff(long tenantId) {
+        return userRepository.findAllByTenantId(tenantId).stream()
+                .map(AuthService::toUserResponse)
+                .toList();
     }
 
     public static UserResponse toUserResponse(User user) {

@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
-const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8080';
 const restaurantName = import.meta.env.PUBLIC_RESTAURANT_NAME || 'CookFlow';
 
 const tableId = Astro.url.searchParams.get('table');

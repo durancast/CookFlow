@@ -5,7 +5,7 @@ const ROUTE_PERMISSIONS: Array<{
   roles: string[];
 }> = [
   { match: (p) => p === '/tpv',             roles: ['admin', 'manager', 'waiter'] },
-  { match: (p) => p === '/cocina',           roles: ['admin', 'manager', 'waiter', 'cook'] },
+  { match: (p) => p === '/cocina',           roles: ['admin', 'manager', 'waiter', 'kitchen'] },
   { match: (p) => p.startsWith('/admin'),    roles: ['admin', 'manager'] },
 ];
 

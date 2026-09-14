@@ -70,7 +70,7 @@ const canEdit = role === 'admin';
 
 <script>
   const canEdit = document.cookie.match(/user_role=([^;]+)/)?.[1] === 'admin';
-  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+  const backendUrl = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8080';
   let isEditing = false;
   let currentTableId: string | null = null;
 
